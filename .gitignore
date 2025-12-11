@@ -1,0 +1,29 @@
+## 1. Build & Runtime Artifacts (Never commit these!)
+[Bb]in/
+[Oo]bj/
+/out/
+*.log
+
+## 2. IDE - JetBrains Rider (Based on your screenshot)
+.idea/
+*.sln.iml
+*.dotCover
+
+## 3. IDE - Visual Studio (In case a teammate uses VS)
+.vs/
+*.user
+*.suo
+*.userprefs
+
+## 4. IDE - VS Code
+.vscode/
+
+## 5. Web API & Secrets (CRITICAL)
+# Ignore local development settings that might contain API keys or DB strings
+appsettings.Development.json
+appsettings.Local.json
+.env
+
+## 6. OS Junk
+.DS_Store
+Thumbs.db
