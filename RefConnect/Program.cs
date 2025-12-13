@@ -4,11 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection") ??
+    throw new InvalidOperationException("Conexiunea la baza de date nu a fost gasita.");
 
 
-var serverVersion = new MySqlServerVersion(new Version(ServerVersion.AutoDetect(connectionString).ToString())); 
-
+//var serverVersion = new MySqlServerVersion(new Version(ServerVersion.AutoDetect(connectionString).ToString())); 
+var serverVersion = new MySqlServerVersion(new Version(8, 0, 31));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
