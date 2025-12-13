@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace RefConnect.Models;
 
 public class Post
 {
+    [Key]
     public int PostId { get; set; }
     public string MediaType { get; set; } // video / image
     public string MediaUrl { get; set; }
@@ -9,7 +12,7 @@ public class Post
     public DateTime CreatedAt { get; set; }
 
     public int UserId { get; set; }
-    public User User { get; set; }
+    public virtual User User { get; set; }
 
-    public ICollection<Comment> Comments { get; set; }
+    public virtual ICollection<Comment> Comments { get; set; }
 }
