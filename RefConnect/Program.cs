@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using RefConnect.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         serverVersion
     )
 );
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+
+
 
 
 
@@ -30,6 +37,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+    
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
