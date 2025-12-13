@@ -12,7 +12,7 @@ namespace RefConnect.Data
             : base(options)
         {
         }
-        public DbSet<User> Users { get; set; }
+        
         public DbSet<Championship> Championships { get; set; }
         public DbSet<Match> Matches { get; set; }
         public DbSet<MatchAssignment> MatchAssignments { get; set; }
@@ -27,7 +27,7 @@ namespace RefConnect.Data
             
             base.OnModelCreating(modelBuilder);
             
-            modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique(); // folosim email pt lookup in bd
+            modelBuilder.Entity<ApplicationUser>().HasIndex(u => u.Email).IsUnique(); // folosim email pt lookup in bd
             //championship
             
             modelBuilder.Entity<Championship>()

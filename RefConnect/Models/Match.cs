@@ -6,13 +6,13 @@ namespace RefConnect.Models;
 public class Match
 {
     [Key]
-    public int MatchId { get; set; }
+    public string MatchId { get; set; }
     public DateTime MatchDateTime { get; set; }
     public string Location { get; set; }
     public string Score { get; set; }
     public string Status { get; set; }
     
-    public int ChampionshipId { get; set; }
+    public string ChampionshipId { get; set; }
     [ForeignKey("ChampionshipId")]
     public Championship Championship { get; set; }
 
