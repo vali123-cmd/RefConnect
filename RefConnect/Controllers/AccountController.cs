@@ -30,6 +30,7 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
         
+        
         var user = new ApplicationUser
         {
             FirstName = model.FirstName,
@@ -55,20 +56,26 @@ public class AccountController : ControllerBase
 
         }
     }
-    
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto model)
     {
         var user = await _userManager.FindByEmailAsync(model.Email);
     if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
         return Unauthorized(new { Message = "Invalid credentials" });
-    var authClaims = new[]
+
+        var userRoles = await _userManager.GetRolesAsync(user);
+
+        
+    var authClaims = new List<Claim>
     {
+
         new Claim(ClaimTypes.Name, user.Email),
         new Claim(ClaimTypes.NameIdentifier, user.Id),
         new Claim(JwtRegisteredClaimNames.Jti,
         Guid.NewGuid().ToString())
-        };
+    };
+    authClaims.AddRange(userRoles.Select(role => new Claim(ClaimTypes.Role, role)));
         var token = new JwtSecurityToken(
         issuer: _configuration["Jwt:Issuer"],
         audience: _configuration["Jwt:Audience"],
