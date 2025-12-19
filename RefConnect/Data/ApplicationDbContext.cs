@@ -27,7 +27,7 @@ namespace RefConnect.Data
             
             base.OnModelCreating(modelBuilder);
             
-            modelBuilder.Entity<ApplicationUser>().HasIndex(u => u.Email).IsUnique(); // folosim email pt lookup in bd
+           
             //championship
             
             modelBuilder.Entity<Championship>()

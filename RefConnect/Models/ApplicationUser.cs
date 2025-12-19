@@ -6,7 +6,8 @@ namespace RefConnect.Models;
 
 public class ApplicationUser : IdentityUser
 {
-    
+     [Required]
+    public override string UserName { get; set; }
     
     [Required] 
     public string FirstName { get; set; }
@@ -14,7 +15,11 @@ public class ApplicationUser : IdentityUser
     [Required]
     public string LastName { get; set; }
 
+   
+    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
+    
 
    
     public virtual ICollection<MatchAssignment> MatchAssignments { get; set; }

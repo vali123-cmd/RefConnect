@@ -1,8 +1,12 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using RefConnect.Data;
 using Microsoft.EntityFrameworkCore;
-
-
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models; 
+using RefConnect.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +14,6 @@ var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection") ??
     throw new InvalidOperationException("Conexiunea la baza de date nu a fost gasita.");
 
-
-//var serverVersion = new MySqlServerVersion(new Version(ServerVersion.AutoDetect(connectionString).ToString())); 
 var serverVersion = new MySqlServerVersion(new Version(8, 0, 31));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -20,39 +22,89 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         serverVersion
     )
 );
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.User.RequireUniqueEmail = true; //Email MUST be unique, .NET only defaults username as unique
+
+    
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 
+builder.Services.AddEndpointsApiExplorer();
+// builder.Services.AddOpenApi(); // Optional: You usually don't need this if using SwaggerGen below.
 
+// 2. FIXED SWAGGER CONFIGURATION
+builder.Services.AddSwaggerGen(option =>
+{
+    // A. Define the Security Scheme
+    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
 
+    option.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
-
-builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-    
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
+
+    app.UseHttpsRedirection();
+
+
+    
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+    app.Run();
+    
+    
 }
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
-
-
-
-
-
-
-
-
