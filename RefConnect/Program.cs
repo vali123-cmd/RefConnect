@@ -87,24 +87,26 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+//Creating roles: admin, user, moderator
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roles = new[] { "Admin", "User", "Moderator" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-
     app.UseSwagger();
     app.UseSwaggerUI();
-
-
     app.UseHttpsRedirection();
-
-
-    
-
     app.UseAuthentication();
     app.UseAuthorization();
-
     app.MapControllers();
     app.Run();
-    
-    
 }

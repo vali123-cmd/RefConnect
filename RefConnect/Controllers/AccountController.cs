@@ -40,6 +40,8 @@ public class AccountController : ControllerBase
         var result = await _userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
         {
+            await _userManager.AddToRoleAsync(user, "User");
+
             return Ok(new { Message = "User registered successfully" });
         }
         else
@@ -53,6 +55,7 @@ public class AccountController : ControllerBase
 
         }
     }
+    
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto model)
     {
@@ -80,9 +83,5 @@ public class AccountController : ControllerBase
         return Ok(new { Token = new
         JwtSecurityTokenHandler().WriteToken(token) 
     });
-        
-        
-        
-        
     }
 }
