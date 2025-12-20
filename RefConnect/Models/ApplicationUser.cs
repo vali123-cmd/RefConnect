@@ -15,8 +15,10 @@ public class ApplicationUser : IdentityUser
     [Required]
     public string LastName { get; set; }
 
+    public string Description {get; set;}
+
    
-    
+   
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
     

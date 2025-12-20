@@ -8,6 +8,8 @@ namespace RefConnect.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    
+    
     public class ChampionshipsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

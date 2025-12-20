@@ -11,7 +11,7 @@ public class UserDto
     public string FullName => $"{FirstName} {LastName}"; 
     public DateTime CreatedAt { get; set; }
     
-   
+    
     public string? Token { get; set; } 
 }
 
