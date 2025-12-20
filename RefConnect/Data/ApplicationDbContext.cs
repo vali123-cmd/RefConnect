@@ -22,6 +22,8 @@ namespace RefConnect.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
 
+        public DbSet<Follow> Follows { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             
@@ -102,6 +104,12 @@ namespace RefConnect.Data
                 .HasForeignKey(c => c.ParentCommentId) 
                 .OnDelete(DeleteBehavior.Cascade); //cand sterg comentariu stergem si reply-urile
             
+            
+            // follow relationships
+            modelBuilder.Entity<Follow>()
+                .HasKey(f => new { f.FollowerId, f.FollowingId });
+           
+
             
         }
         
