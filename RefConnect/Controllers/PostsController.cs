@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
 using RefConnect.DTOs.Posts;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
+// nu includ comentariile in postari, pentru a face rost de comentariile unei postari, se va face o alta cerere API.
 namespace RefConnect.Controllers
 {
     [Route("api/[controller]")]
@@ -21,25 +24,87 @@ namespace RefConnect.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PostDto>>> GetPosts()
         {
-            var posts = await _context.Posts
-                .Select(p => new PostDto
-                {
-                    PostId = p.PostId,
-                    MediaType = p.MediaType,
-                    MediaUrl = p.MediaUrl,
-                    Description = p.Description,
-                    CreatedAt = p.CreatedAt,
-                    UserId = p.UserId
-                })
-                .ToListAsync();
 
-            return Ok(posts);
+            // we should check which posts the requester is allowed to see here: posts from followed users)
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            //if user is not logged in, we return posts where the user has public profile
+            //if user is admin, we return all posts
+
+           
+            if (requesterId != null)
+            {
+                if (!isAdmin)
+                {
+                    var followedUserIds = await _context.Users
+                        .OfType<ApplicationUser>()
+                        .Where(u => _context.Follows
+                            .Any(f => f.FollowerId == requesterId && f.FollowingId == u.Id))
+                        .Select(u => u.Id)
+                        .ToListAsync();
+
+                    var posts = await _context.Posts
+                        .Where(p => followedUserIds.Contains(p.UserId))
+                        .Select(p => new PostDto
+                        {
+                            PostId = p.PostId,
+                            MediaType = p.MediaType,
+                            MediaUrl = p.MediaUrl,
+                            Description = p.Description,
+                            CreatedAt = p.CreatedAt,
+                            UserId = p.UserId
+                        })
+                        .ToListAsync();
+
+                    return Ok(posts);
+                }
+                else
+                {
+                    var posts = await _context.Posts
+                        .Select(p => new PostDto
+                        {
+                            PostId = p.PostId,
+                            MediaType = p.MediaType,
+                            MediaUrl = p.MediaUrl,
+                            Description = p.Description,
+                            CreatedAt = p.CreatedAt,
+                            UserId = p.UserId
+                        })
+                        .ToListAsync();
+
+                    return Ok(posts);
+                } //returnez toate postarile pentru admin
+            }
+            else
+            {
+                var posts = await _context.Posts
+                    .Where(p => _context.Users
+                        .OfType<ApplicationUser>()
+                        .Where(u => u.IsProfilePublic)
+                        .Select(u => u.Id)
+                        .Contains(p.UserId))
+                    .Select(p => new PostDto
+                    {
+                        PostId = p.PostId,
+                        MediaType = p.MediaType,
+                        MediaUrl = p.MediaUrl,
+                        Description = p.Description,
+                        CreatedAt = p.CreatedAt,
+                        UserId = p.UserId
+                    })
+                    .ToListAsync();
+
+                return Ok(posts);
+            }
         }
 
         // GET: api/Posts/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<PostDto>> GetPost(string id)
         {
+            //verific daca un user poate obtine o anumita postare
+
+            var foll
             var post = await _context.Posts.FindAsync(id);
 
             if (post == null)

@@ -22,6 +22,7 @@ namespace RefConnect.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
 
+        public DbSet<Follow> Follows { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             
@@ -101,6 +102,24 @@ namespace RefConnect.Data
                 .WithMany(c => c.Replies) 
                 .HasForeignKey(c => c.ParentCommentId) 
                 .OnDelete(DeleteBehavior.Cascade); //cand sterg comentariu stergem si reply-urile
+
+
+            //follow 
+            modelBuilder.Entity<Follow>()
+                .HasKey(f => new { f.FollowerId, f.FollowingId }); // composite primary key
+            modelBuilder.Entity<Follow>()
+                .HasOne(f => f.Follower)
+                .WithMany(u => u.Following)
+                .HasForeignKey(f => f.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            modelBuilder.Entity<Follow>()
+                .HasOne(f => f.Following)
+                .WithMany(u => u.Followers)
+                .HasForeignKey(f => f.FollowingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            
             
             
         }

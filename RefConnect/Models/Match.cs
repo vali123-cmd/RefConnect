@@ -16,6 +16,6 @@ public class Match
     [ForeignKey("ChampionshipId")]
     public Championship Championship { get; set; }
 
-    public virtual ICollection<MatchAssignment> MatchAssignments { get; set; }
-    public virtual Chat GroupChat { get; set; }
+    public virtual ICollection<MatchAssignment> MatchAssignments { get; set; } = new List<MatchAssignment>();
+    public virtual Chat GroupChat { get; set; } = new Chat();
 }

@@ -16,9 +16,16 @@ public class CreateUserDto
     [StringLength(100, MinimumLength = 6)] 
     public string Password { get; set; }
 
+    [Url]
+    public string ProfileImageUrl { get; set; }
+    [StringLength(1000)]
+    public string Description { get; set; }
+
     [Required]
     public string FirstName { get; set; }
 
+ 
+    
     [Required]
     public string LastName { get; set; }
     

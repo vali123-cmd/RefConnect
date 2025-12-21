@@ -20,5 +20,6 @@ public class UpdateProfileDto
     [Url]
     public string ProfileImageUrl { get; set; }
 
-    public bool IsProfilePublic { get; set; } = true;
+    [Required]
+    public bool IsProfilePublic { get; set; }
 }

@@ -8,8 +8,11 @@ public interface IProfileService
     Task<IEnumerable<ProfileDto>> SearchUsersAsync(string query, int limit = 20, CancellationToken ct = default);
 
     // returns profile; sensitive fields only when owner or profile is public
+    Task<bool> mayViewProfileExtendedAsync(string userId, string requesterId, CancellationToken ct = default);
     Task<ProfileDto?> GetProfileAsync(string userId, string? requesterId = null, CancellationToken ct = default);
 
-    // only owner can update
+    Task<ProfileExtendedDto?> GetProfileExtendedAsync(string userId, string requesterId, CancellationToken ct = default);
+
+    // only owner or admin can update
     Task<bool> UpdateProfileAsync(string userId, UpdateProfileDto dto, string requesterId, CancellationToken ct = default);
 }

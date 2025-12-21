@@ -12,11 +12,14 @@ public class Chat
     public DateTime? ExpiresAt { get; set; }
     public bool IsActive { get; set; }
 
+    [Required(ErrorMessage = "MatchId is required for match chats")]
     public string? MatchId { get; set; }
     [ForeignKey("MatchId")]
-    public Match Match { get; set; }
 
-    public virtual ICollection<ChatUser> ChatUsers { get; set; }
-    public virtual ICollection<Message> Messages { get; set; }
+    [Required(ErrorMessage = "Match is required for match chats")]
+    public Match Match { get; set; } = new Match();
+
+    public virtual ICollection<ChatUser> ChatUsers { get; set; } = new List<ChatUser>();
+    public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
     
 }
