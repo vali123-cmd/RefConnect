@@ -44,7 +44,11 @@ namespace RefConnect.Controllers
                         .ToListAsync();
 
                     var posts = await _context.Posts
-                        .Where(p => followedUserIds.Contains(p.UserId))
+                        .Where(p => followedUserIds.Contains(p.UserId) || _context.Users
+                            .OfType<ApplicationUser>()
+                            .Where(u => u.IsProfilePublic)
+                            .Select(u => u.Id)
+                            .Contains(p.UserId))
                         .Select(p => new PostDto
                         {
                             PostId = p.PostId,
@@ -99,12 +103,56 @@ namespace RefConnect.Controllers
         }
 
         // GET: api/Posts/{id}
+        
         [HttpGet("{id}")]
+
         public async Task<ActionResult<PostDto>> GetPost(string id)
         {
             //verific daca un user poate obtine o anumita postare
 
-            var foll
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            var isFollowing = false;
+
+            // daca requester nu e logat, verificam doar daca postarea apartine unui user cu profil public
+            var postOwnerId = await _context.Posts
+                .Where(p => p.PostId == id)
+                .Select(p => p.UserId)
+                .FirstOrDefaultAsync();
+            if (postOwnerId == null)
+            {
+                return NotFound();
+            }
+            var hasPublicProfile = await _context.Users
+                .OfType<ApplicationUser>()
+                .Where(u => u.Id == postOwnerId)
+                .Select(u => u.IsProfilePublic)
+                .FirstOrDefaultAsync(); 
+            
+            if(requesterId == null)
+            {
+                if (!hasPublicProfile)
+                {
+                    return Forbid();
+                }
+            }
+            else
+            {
+                if (!isAdmin)
+                {
+                    if (requesterId != postOwnerId)
+                    {
+                        isFollowing = await _context.Follows
+                            .AnyAsync(f => f.FollowerId == requesterId && f.FollowingId == postOwnerId);
+                        if (!isFollowing && !hasPublicProfile)
+                        {
+                            return Forbid();
+                        }
+                    }
+                }
+
+            }
+
             var post = await _context.Posts.FindAsync(id);
 
             if (post == null)
@@ -126,9 +174,22 @@ namespace RefConnect.Controllers
         }
 
         // POST: api/Posts
+        //doar un user logat poate crea o postare
+        [Authorize]
         [HttpPost]
+
         public async Task<ActionResult<PostDto>> CreatePost(CreatePostDto createDto)
         {
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");   
+            if (requesterId != createDto.UserId && !isAdmin)
+            {
+                return Forbid();
+                // un user nu poate crea o postare in numele altui user
+            }
+
+            
+
             var post = new Post
             {
                 PostId = Guid.NewGuid().ToString(),
@@ -156,9 +217,25 @@ namespace RefConnect.Controllers
         }
 
         // PUT: api/Posts/{id}
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePost(string id, UpdatePostDto updateDto)
         {
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            var postOwnerId = await _context.Posts
+                .Where(p => p.PostId == id)
+                .Select(p => p.UserId)
+                .FirstOrDefaultAsync();
+            if (postOwnerId == null)
+            {
+                return NotFound();
+            }
+            if (requesterId != postOwnerId && !isAdmin)
+            {
+                return Forbid();
+            }
+
             var post = await _context.Posts.FindAsync(id);
 
             if (post == null)
@@ -176,9 +253,24 @@ namespace RefConnect.Controllers
         }
 
         // DELETE: api/Posts/{id}
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePost(string id)
         {
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            var postOwnerId = await _context.Posts
+                .Where(p => p.PostId == id)
+                .Select(p => p.UserId)
+                .FirstOrDefaultAsync();
+            if (postOwnerId == null)
+            {
+                return NotFound();
+            }
+            if (requesterId != postOwnerId && !isAdmin)
+            {
+                return Forbid();
+            }
             var post = await _context.Posts.FindAsync(id);
 
             if (post == null)

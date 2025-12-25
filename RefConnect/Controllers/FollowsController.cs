@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
 
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+
+
 
 
 namespace RefConnect.Controllers
@@ -19,9 +23,17 @@ namespace RefConnect.Controllers
         }
 
         // POST: api/Follows
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> FollowUser([FromBody] Follow follow)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            if (userId != follow.FollowerId && !isAdmin)
+            {
+                return Forbid();
+            }
+
             if (follow.FollowerId == follow.FollowingId)
             {
                 return BadRequest("You cannot follow yourself.");
@@ -42,9 +54,16 @@ namespace RefConnect.Controllers
             return Ok();
         }
         // DELETE: api/Follows
+        [Authorize]
         [HttpDelete]
         public async Task<IActionResult> UnfollowUser([FromBody] Follow follow)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            if (userId != follow.FollowerId && !isAdmin)
+            {
+                return Forbid();
+            }
             var existingFollow = await _context.Follows
                 .FirstOrDefaultAsync(f => f.FollowerId == follow.FollowerId && f.FollowingId == follow.FollowingId);
             if (existingFollow == null)

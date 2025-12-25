@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.DTOs.Matches;
 using MatchModel = RefConnect.Models.Match;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace RefConnect.Controllers
 {
@@ -61,6 +64,7 @@ namespace RefConnect.Controllers
         }
 
         // POST: api/Matches
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<MatchDto>> CreateMatch(CreateMatchDto createDto)
         {
@@ -91,6 +95,7 @@ namespace RefConnect.Controllers
         }
 
         // PUT: api/Matches/{id}
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMatch(string id, UpdateMatchDto updateDto)
         {
@@ -113,6 +118,7 @@ namespace RefConnect.Controllers
         }
 
         // DELETE: api/Matches/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMatch(string id)
         {

@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
 using RefConnect.DTOs.MatchAssigments;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+
 
 namespace RefConnect.Controllers
 {
@@ -57,6 +60,7 @@ namespace RefConnect.Controllers
         }
 
         // POST: api/MatchAssignments
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<MatchAssignmentDto>> CreateMatchAssignment(CreateMatchAssignmentDto createDto)
         {
@@ -83,6 +87,7 @@ namespace RefConnect.Controllers
         }
 
         // PUT: api/MatchAssignments/{id}
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMatchAssignment(string id, UpdateMatchAssignmentDto updateDto)
         {
@@ -103,13 +108,16 @@ namespace RefConnect.Controllers
         }
 
         // DELETE: api/MatchAssignments/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMatchAssignment(string id)
         {
             var assignment = await _context.MatchAssignments.FindAsync(id);
 
+
             if (assignment == null)
             {
+
                 return NotFound();
             }
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
 using RefConnect.DTOs.Championships;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RefConnect.Controllers
 {
@@ -57,6 +58,7 @@ namespace RefConnect.Controllers
         }
 
         // POST: api/Championships
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<ChampionshipDto>> CreateChampionship(CreateChampionshipDto createDto)
         {
@@ -81,6 +83,7 @@ namespace RefConnect.Controllers
         }
 
         // PUT: api/Championships/{id}
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateChampionship(string id, UpdateChampionshipDto updateDto)
         {
@@ -100,6 +103,7 @@ namespace RefConnect.Controllers
         }
 
         // DELETE: api/Championships/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteChampionship(string id)
         {
