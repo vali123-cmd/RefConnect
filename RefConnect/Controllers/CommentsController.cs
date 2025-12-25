@@ -227,15 +227,16 @@ namespace RefConnect.Controllers
             var isAdmin = User.IsInRole("Admin");
             
             var comment = await _context.Comments.FindAsync(id);
+            if(comment == null)
+            {
+                return NotFound("Comment not found");
+            }
             if(requesterId != comment.UserId && !isAdmin)
             {
                 return Forbid("You are not authorized to delete this comment");
             }
 
-            if (comment == null)
-            {
-                return NotFound("Comment not found");
-            }
+            
 
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
