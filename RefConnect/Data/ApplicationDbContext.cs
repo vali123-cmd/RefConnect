@@ -22,6 +22,8 @@ namespace RefConnect.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
 
+        public DbSet<FollowRequest> FollowRequests { get; set; }
+
         public DbSet<Follow> Follows { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -118,6 +120,26 @@ namespace RefConnect.Data
                 .WithMany(u => u.Followers)
                 .HasForeignKey(f => f.FollowingId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //follow request
+            modelBuilder.Entity<FollowRequest>()
+                .HasKey(fr => new { fr.FollowerId, fr.FollowingId });
+            
+            modelBuilder.Entity<FollowRequest>()
+                .HasOne(fr => fr.FollowerRequest)
+                .WithMany(u => u.FollowingRequest)
+                .HasForeignKey(fr => fr.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+
+            modelBuilder.Entity<FollowRequest>()
+                .HasOne(fr => fr.FollowingRequest)
+                .WithMany(u => u.FollowerRequest)
+                .HasForeignKey(fr => fr.FollowingId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+
+                
 
             
             

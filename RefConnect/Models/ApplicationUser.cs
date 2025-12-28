@@ -39,4 +39,7 @@ public class ApplicationUser : IdentityUser
 
     public virtual ICollection<Follow> Followers { get; set; } = new List<Follow>();
     public virtual ICollection<Follow> Following { get; set; } = new List<Follow>();
+
+    public virtual ICollection<FollowRequest> FollowerRequest { get; set; } = new List<FollowRequest>();
+    public virtual ICollection<FollowRequest> FollowingRequest { get; set; } = new List<FollowRequest>();
 }

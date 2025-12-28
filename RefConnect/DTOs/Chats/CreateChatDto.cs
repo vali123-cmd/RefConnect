@@ -5,6 +5,8 @@ namespace RefConnect.DTOs.Chats;
 public class CreateChatDto
 {
     [Required]
+    public string UserId { get; set; }
+    [Required]
     public string ChatType { get; set; }
 
     public DateTime? ExpiresAt { get; set; }

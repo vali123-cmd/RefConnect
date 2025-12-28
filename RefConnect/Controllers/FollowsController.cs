@@ -47,6 +47,9 @@ namespace RefConnect.Controllers
                 return Conflict("You are already following this user.");
             }
 
+            //if the profile is private, a follow request should be sent instead
+            
+
             follow.FollowedAt = DateTime.UtcNow;
             _context.Follows.Add(follow);
             await _context.SaveChangesAsync();

@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
 using RefConnect.DTOs.ChatUsers;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace RefConnect.Controllers
 {
@@ -18,6 +20,7 @@ namespace RefConnect.Controllers
         }
 
         // GET: api/ChatUsers
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ChatUserDto>>> GetChatUsers()
         {
@@ -34,7 +37,9 @@ namespace RefConnect.Controllers
         }
 
         // GET: api/ChatUsers/{id}
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
+
         public async Task<ActionResult<ChatUserDto>> GetChatUser(string id)
         {
             var chatUser = await _context.ChatUsers.FindAsync(id);
@@ -55,6 +60,7 @@ namespace RefConnect.Controllers
         }
 
         // POST: api/ChatUsers
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<ChatUserDto>> CreateChatUser(CreateChatUserDto createDto)
         {
@@ -79,6 +85,7 @@ namespace RefConnect.Controllers
         }
 
         // PUT: api/ChatUsers/{id}
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateChatUser(string id, UpdateChatUserDto updateDto)
         {
@@ -98,6 +105,7 @@ namespace RefConnect.Controllers
         }
 
         // DELETE: api/ChatUsers/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteChatUser(string id)
         {
