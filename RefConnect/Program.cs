@@ -7,6 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models; 
 using RefConnect.Models;
+using RefConnect.Services.Implementations;
+using RefConnect.Services.Interfaces;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,6 +86,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddHttpClient<RefConnect.Services.Interfaces.IRefinePostTextAI, RefConnect.Services.Implementations.RefinePostTextAIService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["OpenAI:ApiUrl"] ?? "https://api.openai.com/v1/");
+    client.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue("Bearer", builder.Configuration["OpenAI:ApiKey"] ?? string.Empty);
+});
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -99,9 +108,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
+
+
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseHttpsRedirection();
@@ -109,4 +118,3 @@ if (app.Environment.IsDevelopment())
     app.UseAuthorization();
     app.MapControllers();
     app.Run();
-}

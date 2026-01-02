@@ -5,6 +5,9 @@ using RefConnect.Models;
 using RefConnect.DTOs.Posts;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using RefConnect.Services.Interfaces;
+using RefConnect.Services.Implementations;
+
 
 // nu includ comentariile in postari, pentru a face rost de comentariile unei postari, se va face o alta cerere API.
 namespace RefConnect.Controllers
@@ -14,10 +17,12 @@ namespace RefConnect.Controllers
     public class PostsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IRefinePostTextAI _refinePostTextAI;
 
-        public PostsController(ApplicationDbContext context)
+        public PostsController(ApplicationDbContext context, IRefinePostTextAI refinePostTextAI )
         {
             _context = context;
+            _refinePostTextAI = refinePostTextAI;
         }
 
         // GET: api/Posts
@@ -283,6 +288,17 @@ namespace RefConnect.Controllers
 
             return NoContent();
         }
+       //[Authorize] 
+        [HttpPost("refine")]
+        public async Task<ActionResult<string>> RefinePostText([FromBody] string postText)
+        {
+            var refinedText = await _refinePostTextAI.RefineTextAsync(postText);
+            return Ok(refinedText);
+        }
     }
+
+    
+
+
 }
 
