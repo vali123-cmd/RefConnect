@@ -13,6 +13,18 @@ using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactDevClient", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()    
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection") ??
     throw new InvalidOperationException("Conexiunea la baza de date nu a fost gasita.");
@@ -110,7 +122,7 @@ using (var scope = app.Services.CreateScope())
 
 
 
-
+    app.UseCors("AllowReactDevClient");
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseHttpsRedirection();

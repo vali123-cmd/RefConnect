@@ -21,12 +21,12 @@ public class UserDto
     public string FullName => $"{FirstName} {LastName}"; 
     [Required]
     public DateTime CreatedAt { get; set; }
-    [Required]
+    
     public string ProfileImageUrl { get; set; }
     [Required]
     public string Description { get; set; }
-    [Required]
-    public bool IsProfilePublic { get; set; }
+   
+    public bool IsProfilePublic { get; set; } = true;
     [Required]
     public int FollowersCount { get; set; }
     [Required]

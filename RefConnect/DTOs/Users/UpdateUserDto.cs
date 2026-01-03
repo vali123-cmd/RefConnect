@@ -23,8 +23,8 @@ public class UpdateUserDto
     [StringLength(1000)]
     public string Description { get; set; }
 
+    
     [Required]
-    [Url]
     public string ProfileImageUrl { get; set; }
 
     [Required]

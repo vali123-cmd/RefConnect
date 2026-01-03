@@ -17,7 +17,7 @@ public class ApplicationUser : IdentityUser
     [Required]
     public string LastName { get; set; } = string.Empty;
 
-    [Required]
+    
     public string ProfileImageUrl { get; set; } = string.Empty;
 
     [Required]
