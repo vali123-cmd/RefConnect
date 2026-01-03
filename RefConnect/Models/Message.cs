@@ -5,13 +5,19 @@ namespace RefConnect.Models;
 public class Message
 {
     [Key]
-    public string MessageId { get; set; }
-    public string Content { get; set; }
-    public DateTime SentAt { get; set; }
 
-    public string ChatId { get; set; }
-    public virtual Chat Chat { get; set; }
+    [Required]
+    public string MessageId { get; set; } = null!;
 
-    public string UserId { get; set; }
-    public virtual ApplicationUser User { get; set; }
+    [Required]
+
+    public string Content { get; set; } = null!;
+    public DateTime SentAt { get; set; } = DateTime.UtcNow;
+    [Required]
+    public string ChatId { get; set; } = null!;
+ 
+    public virtual Chat Chat { get; set; } = null!;
+    [Required]
+    public string UserId { get; set; } = null!;
+    public virtual ApplicationUser User { get; set; } = null!;
 }

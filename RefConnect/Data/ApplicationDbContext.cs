@@ -25,6 +25,8 @@ namespace RefConnect.Data
         public DbSet<FollowRequest> FollowRequests { get; set; }
 
         public DbSet<Follow> Follows { get; set; }
+
+        public DbSet<Like> Likes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             
@@ -137,6 +139,22 @@ namespace RefConnect.Data
                 .WithMany(u => u.FollowerRequest)
                 .HasForeignKey(fr => fr.FollowingId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //like
+            modelBuilder.Entity<Like>()
+                .HasKey(l => new { l.UserId, l.PostId });
+            modelBuilder.Entity<Like>()
+                .HasOne(l => l.User)
+                .WithMany()
+                .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            modelBuilder.Entity<Like>()
+                .HasOne(l => l.Post)
+                .WithMany(p => p.Likes)
+                .HasForeignKey(l => l.PostId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
             
 
                 
