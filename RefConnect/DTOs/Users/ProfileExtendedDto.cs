@@ -32,7 +32,7 @@ public class ProfileExtendedDto
     public ICollection<string> FollowingIds { get; set; }
 
     [Required]
-    public ICollection<PostDto> Posts { get; set; }
+    public ICollection<PostDto> Posts { get; set; } 
 
     [Required]
     public ICollection<MatchAssignmentDto> MatchAssignments { get; set; }

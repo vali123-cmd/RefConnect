@@ -23,75 +23,83 @@ namespace RefConnect.Controllers
         // POST: api/Like
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> LikePost(LikeDto like)
+        public async Task<IActionResult> LikePost([FromBody] LikeDto likeDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
-            if (userId != like.UserId && !isAdmin)
-            {
+            if (userId != likeDto.UserId && !isAdmin)
                 return Forbid();
-            }
 
             var existingLike = await _context.Likes
-                .FirstOrDefaultAsync(l => l.UserId == like.UserId && l.PostId == like.PostId);
-
+                .FirstOrDefaultAsync(l => l.UserId == likeDto.UserId && l.PostId == likeDto.PostId);
             if (existingLike != null)
-            {
-                return Conflict("You have already liked this post.");
-            }
-            var post = await _context.Posts.FindAsync(like.PostId);
+                return Conflict(new { message = "Already liked." });
+
+            var post = await _context.Posts.FindAsync(likeDto.PostId);
             if (post == null)
-            {
-                return NotFound("Post not found.");
-            }
+                return NotFound(new { message = "Post not found." });
+
             post.LikeCount += 1;
             _context.Posts.Update(post);
             await _context.SaveChangesAsync();
-            
 
-            like.LikedAt = DateTime.UtcNow;
-            _context.Likes.Add(like);
+
+            var likeEntity = new Like
+            {
+                UserId = likeDto.UserId,
+                PostId = likeDto.PostId,
+                LikedAt = likeDto.LikedAt ?? DateTime.UtcNow
+            };
+
+            _context.Likes.Add(likeEntity);
             await _context.SaveChangesAsync();
 
-            return Ok("Post liked successfully.");
+            // return DTO to avoid serializing navigation properties and cycles
+            var resultDto = new LikeDto
+            {
+                UserId = likeEntity.UserId,
+                PostId = likeEntity.PostId,
+                LikedAt = likeEntity.LikedAt
+            };
+
+            return Ok(resultDto);
         }
 
         // DELETE: api/Like
         [Authorize]
         [HttpDelete]
-        public async Task<IActionResult> UnlikePost(LikeDto like)
+        public async Task<IActionResult> UnlikePost([FromBody] LikeDto likeDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
-            if (userId != like.UserId && !isAdmin)
-            {
-                return Forbid("You are not authorized to unlike this post in name of another user.");
+            if (userId != likeDto.UserId && !isAdmin)
+                return Forbid();
 
-            }
             var existingLike = await _context.Likes
-                .FirstOrDefaultAsync(l => l.UserId == like.UserId && l.PostId == like.PostId);
+                .FirstOrDefaultAsync(l => l.UserId == likeDto.UserId && l.PostId == likeDto.PostId);
             if (existingLike == null)
-            {
-                return NotFound("Like not found.");
-            }
-            var post = await _context.Posts.FindAsync(like.PostId);
+                return NotFound(new { message = "Like not found." });
+            var post = await _context.Posts.FindAsync(likeDto.PostId);
             if (post == null)
-            {
-                return NotFound("Post not found.");
-            }
-            post.LikeCount -= 1;
+                return NotFound(new { message = "Post not found." });
+            post.LikeCount = Math.Max(0, post.LikeCount - 1);
             _context.Posts.Update(post);
             await _context.SaveChangesAsync();
 
             _context.Likes.Remove(existingLike);
             await _context.SaveChangesAsync();
-            return Ok("Post unliked successfully.");
+
+            return NoContent();
         }
         [Authorize]
-        [HttpGet("exists")]
-        public async Task<bool> LikeExistsAsync(LikeExistsDto likeDto)
+        [HttpPost("exists")]
+        public async Task<ActionResult<bool>> LikeExistsAsync([FromBody] LikeExistsDto req)
         {
-            return await _context.Likes.AnyAsync(l => l.UserId == likeDto.UserId && l.PostId == likeDto.PostId);
+            if (req == null || string.IsNullOrWhiteSpace(req.UserId) || string.IsNullOrWhiteSpace(req.PostId))
+                return BadRequest(new { error = "userId and postId are required." });
+
+            var exists = await _context.Likes.AnyAsync(l => l.UserId == req.UserId && l.PostId == req.PostId);
+            return Ok(exists);
         }
     }
 }

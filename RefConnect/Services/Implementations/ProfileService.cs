@@ -112,12 +112,26 @@ public class ProfileService : RefConnect.Services.Interfaces.IProfileService
                 Posts = u.Posts.Select(p => new PostDto
                 {
                     PostId = p.PostId,
+
                     Description = p.Description,
                     MediaType = p.MediaType,
                     MediaUrl = p.MediaUrl,
-                    CreatedAt = p.CreatedAt
+                    CreatedAt = p.CreatedAt,
+                    LikeCount = p.LikeCount,
+                    UserId = p.UserId,
+                    Comments = p.Comments.Select(c => new CommentDto
+                    {
+                        CommentId = c.CommentId,
+                        Content = c.Content,
+                        CreatedAt = c.CreatedAt,
+                        UserId = c.UserId,
+                        PostId = c.PostId
+                    }).ToList(),
+
+
 
                 }).ToList(),
+
                 MatchAssignments = u.MatchAssignments.Select(ma => new MatchAssignmentDto
                 {
                     MatchAssignmentId = ma.MatchAssignmentId,

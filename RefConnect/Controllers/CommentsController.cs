@@ -189,28 +189,36 @@ namespace RefConnect.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateComment(string id, UpdateCommentDto updateDto)
         {
+            if (updateDto == null) return BadRequest();
+
+            var commentToUpdate = await _context.Comments
+                .Include(c => c.Post)
+                .ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(c => c.CommentId == id);
+
+            if (commentToUpdate == null) return NotFound("Comment not found");
+
             var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
-            var commentToUpdate = await _context.Comments.FindAsync(id);
-            if (commentToUpdate == null)
-            {
-                return NotFound("Comment not found");
-            }
+
             if (commentToUpdate.UserId != requesterId && !isAdmin)
-            {
                 return Forbid("You are not authorized to update this comment");
-            }
+
+            var post = commentToUpdate.Post;
+            var postOwner = post?.User;
+            if (post == null || postOwner == null)
+                return BadRequest("Related post or post owner not found");
+
             var isFollower = await _context.Follows
-                .AnyAsync(f => f.FollowerId == requesterId && f.FollowingId == commentToUpdate.Post.UserId);
-            if (!commentToUpdate.Post.User.IsProfilePublic && commentToUpdate.Post.User.Id != requesterId && !isAdmin && !isFollower)
-            {
+                .AnyAsync(f => f.FollowerId == requesterId && f.FollowingId == postOwner.Id);
+
+            if (!postOwner.IsProfilePublic && postOwner.Id != requesterId && !isAdmin && !isFollower)
                 return Forbid("You are not authorized to update this comment");
-            }
 
+            // only update content (UpdateCommentDto contains only Content)
+            commentToUpdate.Content = updateDto.Content?.Trim();
 
-            
-
-            commentToUpdate.Content = updateDto.Content;
+            _context.Comments.Update(commentToUpdate);
             await _context.SaveChangesAsync();
 
             return NoContent();

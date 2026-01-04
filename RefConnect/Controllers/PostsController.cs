@@ -207,7 +207,8 @@ namespace RefConnect.Controllers
                 Description = createDto.Description,
                 LikeCount = 0,
                 CreatedAt = DateTime.UtcNow,
-                UserId = createDto.UserId
+                UserId = createDto.UserId,
+              
             };
 
             _context.Posts.Add(post);

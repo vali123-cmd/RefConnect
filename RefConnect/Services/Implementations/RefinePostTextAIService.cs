@@ -140,6 +140,61 @@ public class RefinePostTextAIService : IRefinePostTextAI
             _logger.LogError(ex, "Error while calling OpenAI for refine text");
             return inputText;
         }
+    }  
+    public async Task<bool> IsContentAppropriateAsync(string content, CancellationToken ct = default)
+    {
+        var requestBody = new
+        {
+            model = "llama-3.3-70b-versatile",
+            messages = new[]
+            {
+                new { role = "system", content = "You are a content moderator. Determine if the given content is appropriate for all audiences. The content is in Romanian." },
+                new { role = "user", content = $"Is the following content appropriate? \"{content}\" Respond with 'yes' or 'no'." }
+            },
+            temperature = 0.0,
+            max_tokens = 10
+        };
+
+        var requestJson = JsonSerializer.Serialize(requestBody, _jsonOptions);
+        using var contentHttp = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+        if (!_httpClient.DefaultRequestHeaders.Contains("Authorization"))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+        }
+
+        try
+        {
+            _logger.LogInformation("Sending content appropriateness request to OpenAI API");
+
+            var postUrl = _httpClient.BaseAddress == null ? _apiUrl : "chat/completions";
+            var response = await _httpClient.PostAsync(postUrl, contentHttp, ct);
+            var responseString = await response.Content.ReadAsStringAsync(ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("OpenAI API error: {StatusCode} - {Content}", response.StatusCode, responseString);
+                return true; 
+            }
+
+            var openAiResponse = JsonSerializer.Deserialize<OpenAiResponse>(responseString, _jsonOptions);
+            var assistantMessage = openAiResponse?.Choices?.FirstOrDefault()?.Message?.Content;
+
+            if (string.IsNullOrWhiteSpace(assistantMessage))
+            {
+                _logger.LogWarning("OpenAI returned empty assistant message");
+                return true; 
+            }
+
+            _logger.LogInformation("OpenAI assistant message: {Msg}", assistantMessage);
+
+            return assistantMessage.Trim().ToLowerInvariant().StartsWith("yes");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while calling OpenAI for content appropriateness");
+            return true; 
+        }
     }
 
     private class OpenAiResponse

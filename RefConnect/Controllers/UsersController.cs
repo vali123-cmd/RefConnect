@@ -14,10 +14,11 @@ namespace RefConnect.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public UsersController(UserManager<ApplicationUser> userManager)
+        private readonly IWebHostEnvironment _environment;
+        public UsersController(UserManager<ApplicationUser> userManager, IWebHostEnvironment environment)
         {
             _userManager = userManager;
+            _environment = environment;
         }
 
      
@@ -46,7 +47,67 @@ namespace RefConnect.Controllers
 
             return Ok(users);
         }
+        //GET: api/Users/{id}/profile-image
+        [HttpGet("{id}/profile-image")]
+        public async Task<ActionResult<string>> GetProfileImageUrl(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(new { profileImageUrl = user.ProfileImageUrl });
+        }
+        // POST: api/Users/{id}/profile-image
 
+        [HttpPost("{id}/profile-image")]
+        [Authorize]
+        public async Task<IActionResult> UploadProfileImage(string id, [FromForm] IFormFile file)
+        {
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            if (requesterId != id && !isAdmin) return Forbid();
+
+            if (file == null || file.Length == 0) return BadRequest(new { error = "file is required." });
+
+            // validate content type and size
+            var allowed = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+            if (!allowed.Contains(file.ContentType?.ToLowerInvariant()))
+                return BadRequest(new { error = "invalid file type." });
+            const long maxBytes = 10 * 1024 * 1024; // 10 MB
+            if (file.Length > maxBytes) return BadRequest(new { error = "file too large (max 10MB)." });
+
+            // determine uploads folder, fallback if WebRootPath is null
+            var webRoot = _environment.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRoot))
+            {
+                webRoot = Path.Combine(_environment.ContentRootPath ?? Directory.GetCurrentDirectory(), "wwwroot");
+            }
+
+            var uploadsFolder = Path.Combine(webRoot, "uploads", "profile-images");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var ext = Path.GetExtension(file.FileName);
+            var safeFileName = $"{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsFolder, safeFileName);
+
+            await using (var stream = System.IO.File.Create(filePath))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // public url (served from wwwroot)
+            var publicUrl = $"/uploads/profile-images/{safeFileName}";
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            user.ProfileImageUrl = publicUrl;
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded) return BadRequest(updateResult.Errors);
+
+            return Ok(new { url = publicUrl });
+        }
     
         [HttpGet("{id}")]
         [Authorize]
@@ -119,6 +180,7 @@ namespace RefConnect.Controllers
 
             return NoContent();
         }
+
 
        
         [HttpDelete("{id}")]

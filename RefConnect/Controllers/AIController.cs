@@ -37,5 +37,16 @@ namespace RefConnect.Controllers
             var refinedText = await _aiService.RefineTextAsync(text);
             return Ok(refinedText);
         }
+        [HttpPost("appropriate-content")]
+        [Authorize]
+        public async Task<ActionResult<bool>> IsContentAppropriate([FromBody] string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return BadRequest(new { error = "content query parameter is required." });
+
+            var isAppropriate = await _aiService.IsContentAppropriateAsync(content);
+            return Ok(isAppropriate);
+            
+        }
     }
 }

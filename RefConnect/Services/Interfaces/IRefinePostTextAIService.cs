@@ -21,6 +21,6 @@ namespace RefConnect.Services.Interfaces
     public interface IRefinePostTextAI
     {
         Task<string> RefineTextAsync(string inputText, CancellationToken ct = default);
-
+        Task<bool> IsContentAppropriateAsync(string content, CancellationToken ct = default);
     }
 }
