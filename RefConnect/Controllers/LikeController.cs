@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
-
+using RefConnect.DTOs.Likes;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -23,7 +23,7 @@ namespace RefConnect.Controllers
         // POST: api/Like
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> LikePost([FromBody] Like like)
+        public async Task<IActionResult> LikePost(LikeDto like)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
@@ -39,6 +39,15 @@ namespace RefConnect.Controllers
             {
                 return Conflict("You have already liked this post.");
             }
+            var post = await _context.Posts.FindAsync(like.PostId);
+            if (post == null)
+            {
+                return NotFound("Post not found.");
+            }
+            post.LikeCount += 1;
+            _context.Posts.Update(post);
+            await _context.SaveChangesAsync();
+            
 
             like.LikedAt = DateTime.UtcNow;
             _context.Likes.Add(like);
@@ -50,7 +59,7 @@ namespace RefConnect.Controllers
         // DELETE: api/Like
         [Authorize]
         [HttpDelete]
-        public async Task<IActionResult> UnlikePost([FromBody] Like like)
+        public async Task<IActionResult> UnlikePost(LikeDto like)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
@@ -65,9 +74,24 @@ namespace RefConnect.Controllers
             {
                 return NotFound("Like not found.");
             }
+            var post = await _context.Posts.FindAsync(like.PostId);
+            if (post == null)
+            {
+                return NotFound("Post not found.");
+            }
+            post.LikeCount -= 1;
+            _context.Posts.Update(post);
+            await _context.SaveChangesAsync();
+
             _context.Likes.Remove(existingLike);
             await _context.SaveChangesAsync();
             return Ok("Post unliked successfully.");
+        }
+        [Authorize]
+        [HttpGet("exists")]
+        public async Task<bool> LikeExistsAsync(LikeExistsDto likeDto)
+        {
+            return await _context.Likes.AnyAsync(l => l.UserId == likeDto.UserId && l.PostId == likeDto.PostId);
         }
     }
 }

@@ -104,7 +104,11 @@ builder.Services.AddHttpClient<RefConnect.Services.Interfaces.IRefinePostTextAI,
     client.DefaultRequestHeaders.Authorization =
         new AuthenticationHeaderValue("Bearer", builder.Configuration["OpenAI:ApiKey"] ?? string.Empty);
 });
+
+
 builder.Services.AddControllers();
+// Register application services
+builder.Services.AddScoped<RefConnect.Services.Interfaces.IProfileService, RefConnect.Services.Implementations.ProfileService>();
 
 var app = builder.Build();
 

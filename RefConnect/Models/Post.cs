@@ -9,6 +9,7 @@ public class Post
 
    
     public string MediaType { get; set; } = null!; 
+
     public string MediaUrl { get; set; } = null!;
     public string Description { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -16,6 +17,9 @@ public class Post
 
 
     public string UserId { get; set; } = null!;
+
+    [Required]
+    public int LikeCount { get; set; } = 0;
     public virtual ApplicationUser User { get; set; } = null!;
 
     public virtual ICollection<Like> Likes { get; set; } = new List<Like>();

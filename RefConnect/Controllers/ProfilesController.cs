@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Models;
 using RefConnect.DTOs.Users;
 using RefConnect.Services.Interfaces;
-using RefConnect.Services.Implementations;
 using System.Security.Claims;
 
 
@@ -20,9 +19,9 @@ namespace RefConnect.Controllers
     public class ProfilesController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ProfileService _profileService;
+        private readonly IProfileService _profileService;
 
-        public ProfilesController(UserManager<ApplicationUser> userManager, ProfileService profileService)
+        public ProfilesController(UserManager<ApplicationUser> userManager, IProfileService profileService)
         {
             _userManager = userManager;
             _profileService = profileService;

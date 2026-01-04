@@ -11,7 +11,7 @@ using RefConnect.Services.Interfaces;
 
 
 
-public class ProfileService 
+public class ProfileService : RefConnect.Services.Interfaces.IProfileService
 {
     private readonly ApplicationDbContext _dbContext;
     public ProfileService(ApplicationDbContext dbContext)
@@ -132,6 +132,30 @@ public class ProfileService
             //pentru utilizator returnez deja datele despre postari in json, pentru a evita multiple apeluri catre server
             /* pentru meciuri(care pot fi multe si nu sunt mereu necesare) nu le includ in acest endpoint, ci le las pentru un endpoint separat, deoarece
             / exista multe date legate de meciuri care pot incarca mult raspunsul si nu sunt intotdeauna necesare */
+    }
+
+    public async Task<bool> UpdateProfileAsync(string userId, UpdateProfileDto dto, string requesterId, CancellationToken ct = default)
+    {
+        // Only allow owner to update here; controllers may enforce admin rules if needed
+        if (userId != requesterId)
+        {
+            return false;
+        }
+
+        var user = await _dbContext.Users.OfType<ApplicationUser>()
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+        if (user == null) return false;
+
+        user.FirstName = dto.FirstName;
+        user.LastName = dto.LastName;
+        user.Description = dto.Description;
+        user.ProfileImageUrl = dto.ProfileImageUrl;
+        user.IsProfilePublic = dto.IsProfilePublic;
+
+        await _dbContext.SaveChangesAsync(ct);
+
+        return true;
     }
 
 

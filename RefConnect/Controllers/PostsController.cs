@@ -59,6 +59,7 @@ namespace RefConnect.Controllers
                             PostId = p.PostId,
                             MediaType = p.MediaType,
                             MediaUrl = p.MediaUrl,
+                            LikeCount = p.LikeCount,
                             Description = p.Description,
                             CreatedAt = p.CreatedAt,
                             UserId = p.UserId
@@ -75,6 +76,7 @@ namespace RefConnect.Controllers
                             PostId = p.PostId,
                             MediaType = p.MediaType,
                             MediaUrl = p.MediaUrl,
+                            LikeCount = p.LikeCount,
                             Description = p.Description,
                             CreatedAt = p.CreatedAt,
                             UserId = p.UserId
@@ -97,6 +99,7 @@ namespace RefConnect.Controllers
                         PostId = p.PostId,
                         MediaType = p.MediaType,
                         MediaUrl = p.MediaUrl,
+                        LikeCount = p.LikeCount,
                         Description = p.Description,
                         CreatedAt = p.CreatedAt,
                         UserId = p.UserId
@@ -170,6 +173,7 @@ namespace RefConnect.Controllers
                 PostId = post.PostId,
                 MediaType = post.MediaType,
                 MediaUrl = post.MediaUrl,
+                LikeCount = post.LikeCount,
                 Description = post.Description,
                 CreatedAt = post.CreatedAt,
                 UserId = post.UserId
@@ -201,6 +205,7 @@ namespace RefConnect.Controllers
                 MediaType = createDto.MediaType,
                 MediaUrl = createDto.MediaUrl,
                 Description = createDto.Description,
+                LikeCount = 0,
                 CreatedAt = DateTime.UtcNow,
                 UserId = createDto.UserId
             };
@@ -214,6 +219,7 @@ namespace RefConnect.Controllers
                 MediaType = post.MediaType,
                 MediaUrl = post.MediaUrl,
                 Description = post.Description,
+                LikeCount = post.LikeCount,
                 CreatedAt = post.CreatedAt,
                 UserId = post.UserId
             };
@@ -251,6 +257,7 @@ namespace RefConnect.Controllers
             post.MediaType = updateDto.MediaType;
             post.MediaUrl = updateDto.MediaUrl;
             post.Description = updateDto.Description;
+            
 
             await _context.SaveChangesAsync();
 
