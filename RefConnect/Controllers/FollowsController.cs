@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
 using RefConnect.DTOs.Follow;
+using RefConnect.DTOs.Users;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -82,6 +83,52 @@ namespace RefConnect.Controllers
             _context.Follows.Remove(existingFollow);
             await _context.SaveChangesAsync();
             return Ok();
+        }
+
+        // GET: api/Follows/{userId}/followers
+        [HttpGet("{userId}/followers")]
+        public async Task<ActionResult<IEnumerable<ProfileDto>>> GetFollowers(string userId)
+        {
+            var followers = await _context.Follows
+                .Where(f => f.FollowingId == userId)
+                .Include(f => f.Follower)
+                .Select(f => new ProfileDto
+                {
+                    Id = f.Follower.Id,
+                    UserName = f.Follower.UserName,
+                    FullName = $"{f.Follower.FirstName} {f.Follower.LastName}",
+                    Description = f.Follower.Description,
+                    ProfileImageUrl = f.Follower.ProfileImageUrl,
+                    IsProfilePublic = f.Follower.IsProfilePublic,
+                    FollowersCount = f.Follower.FollowersCount,
+                    FollowingCount = f.Follower.FollowingCount
+                })
+                .ToListAsync();
+
+            return Ok(followers);
+        }
+
+        // GET: api/Follows/{userId}/following
+        [HttpGet("{userId}/following")]
+        public async Task<ActionResult<IEnumerable<ProfileDto>>> GetFollowing(string userId)
+        {
+            var following = await _context.Follows
+                .Where(f => f.FollowerId == userId)
+                .Include(f => f.Following)
+                .Select(f => new ProfileDto
+                {
+                    Id = f.Following.Id,
+                    UserName = f.Following.UserName,
+                    FullName = $"{f.Following.FirstName} {f.Following.LastName}",
+                    Description = f.Following.Description,
+                    ProfileImageUrl = f.Following.ProfileImageUrl,
+                    IsProfilePublic = f.Following.IsProfilePublic,
+                    FollowersCount = f.Following.FollowersCount,
+                    FollowingCount = f.Following.FollowingCount
+                })
+                .ToListAsync();
+
+            return Ok(following);
         }
         
     }
