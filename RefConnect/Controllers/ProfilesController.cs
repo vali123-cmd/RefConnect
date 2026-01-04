@@ -26,6 +26,25 @@ namespace RefConnect.Controllers
             _userManager = userManager;
             _profileService = profileService;
         }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProfileDto>>> GetProfiles()
+        {
+            var users = await _userManager.Users
+                .Select(u => new ProfileDto
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    FullName = $"{u.FirstName} {u.LastName}",
+                    Description = u.Description,
+                    ProfileImageUrl = u.ProfileImageUrl,
+                    IsProfilePublic = u.IsProfilePublic,
+                    FollowersCount = u.FollowersCount,
+                    FollowingCount = u.FollowingCount,
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<ProfileDto>>> SearchUsers([FromQuery] string query)
         {

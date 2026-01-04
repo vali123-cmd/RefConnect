@@ -20,22 +20,25 @@ public class ProfileService : RefConnect.Services.Interfaces.IProfileService
     }
     public async Task<IEnumerable<ProfileDto>> SearchUsersAsync(string query, int limit = 20, CancellationToken ct = default)
     {
-
-        return await _dbContext.Users.OfType<ApplicationUser>()
+        var users = await _dbContext.Users.OfType<ApplicationUser>()
             .Where(u => u.UserName.Contains(query))
             .Take(limit)
-            .Select(u => new ProfileDto
+            .ToListAsync(ct);
+
+        return users.Select(u => {
+            Console.WriteLine($"User: {u.UserName}, Id: {u.Id}"); // Debug log
+            return new ProfileDto
             {
-                
-                UserName = u.UserName,
+                Id = u.Id,
+                UserName = u.UserName ?? string.Empty,
                 FullName = $"{u.FirstName} {u.LastName}",
-                Description = u.Description,
+                Description = u.Description ?? string.Empty,
                 ProfileImageUrl = u.ProfileImageUrl,
                 IsProfilePublic = u.IsProfilePublic,
                 FollowersCount = u.FollowersCount,
                 FollowingCount = u.FollowingCount,
-            })
-            .ToListAsync(ct);
+            };
+        }).ToList();
     }
     //in controller se va folosi aceasta functie pentru a stabili daca requester-ul are voie sa vada datele extinse ale profilului
     public async Task<bool> mayViewProfileExtendedAsync(string userId, string requesterId, CancellationToken ct = default)
@@ -75,6 +78,7 @@ public class ProfileService : RefConnect.Services.Interfaces.IProfileService
                 .Select(u => new ProfileDto
                 {
                     UserName = u.UserName,
+                    Id = u.Id,
                     FullName = $"{u.FirstName} {u.LastName}",
                     Description = u.Description,
                     ProfileImageUrl = u.ProfileImageUrl,
@@ -101,6 +105,7 @@ public class ProfileService : RefConnect.Services.Interfaces.IProfileService
             .Select(u => new ProfileExtendedDto
             {
                 UserName = u.UserName,
+                Id = u.Id,
                 FullName = $"{u.FirstName} {u.LastName}",
                 Description = u.Description,
                 ProfileImageUrl = u.ProfileImageUrl,

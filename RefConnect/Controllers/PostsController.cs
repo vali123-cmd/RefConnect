@@ -30,12 +30,10 @@ namespace RefConnect.Controllers
         public async Task<ActionResult<IEnumerable<PostDto>>> GetPosts()
         {
 
-            // we should check which posts the requester is allowed to see here: posts from followed users)
+           
             var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
-            //if user is not logged in, we return posts where the user has public profile
-            //if user is admin, we return all posts
-
+         
            
             if (requesterId != null)
             {
@@ -49,11 +47,14 @@ namespace RefConnect.Controllers
                         .ToListAsync();
 
                     var posts = await _context.Posts
-                        .Where(p => followedUserIds.Contains(p.UserId) || _context.Users
-                            .OfType<ApplicationUser>()
-                            .Where(u => u.IsProfilePublic)
-                            .Select(u => u.Id)
-                            .Contains(p.UserId))
+                        .Where(p => p.UserId == requesterId || 
+                                    followedUserIds.Contains(p.UserId) || 
+                                    _context.Users
+                                        .OfType<ApplicationUser>()
+                                        .Where(u => u.IsProfilePublic)
+                                        .Select(u => u.Id)
+                                        .Contains(p.UserId))
+                        .OrderByDescending(p => p.CreatedAt)
                         .Select(p => new PostDto
                         {
                             PostId = p.PostId,
@@ -71,6 +72,7 @@ namespace RefConnect.Controllers
                 else
                 {
                     var posts = await _context.Posts
+                        .OrderByDescending(p => p.CreatedAt)
                         .Select(p => new PostDto
                         {
                             PostId = p.PostId,
@@ -94,6 +96,7 @@ namespace RefConnect.Controllers
                         .Where(u => u.IsProfilePublic)
                         .Select(u => u.Id)
                         .Contains(p.UserId))
+                    .OrderByDescending(p => p.CreatedAt)
                     .Select(p => new PostDto
                     {
                         PostId = p.PostId,

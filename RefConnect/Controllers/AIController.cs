@@ -38,7 +38,7 @@ namespace RefConnect.Controllers
             return Ok(refinedText);
         }
         [HttpPost("appropriate-content")]
-        [Authorize]
+        
         public async Task<ActionResult<bool>> IsContentAppropriate([FromBody] string content)
         {
             if (string.IsNullOrWhiteSpace(content))

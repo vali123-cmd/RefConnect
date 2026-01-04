@@ -161,7 +161,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
+    
     app.UseStaticFiles();
     app.UseCors("AllowReactDevClient");
     app.UseSwagger();

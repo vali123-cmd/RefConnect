@@ -5,6 +5,8 @@ namespace RefConnect.DTOs.Users;
 public class ProfileDto
 {
     [Required]
+    public string Id { get; set; }
+    [Required]
     public string UserName { get; set; }
     [Required]
     public string FullName { get; set; }
