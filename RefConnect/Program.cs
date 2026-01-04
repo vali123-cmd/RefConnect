@@ -109,6 +109,8 @@ builder.Services.AddHttpClient<RefConnect.Services.Interfaces.IRefinePostTextAI,
 builder.Services.AddControllers();
 // Register application services
 builder.Services.AddScoped<RefConnect.Services.Interfaces.IProfileService, RefConnect.Services.Implementations.ProfileService>();
+builder.Services.AddScoped<IFollowRequestService, FollowRequestService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 
