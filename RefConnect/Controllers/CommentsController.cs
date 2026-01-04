@@ -56,7 +56,7 @@ namespace RefConnect.Controllers
                     PostId = c.PostId,
                     UserId = c.UserId,
                     ParentCommentId = c.ParentCommentId
-                })
+                }).OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
             return Ok(comments);
         }
