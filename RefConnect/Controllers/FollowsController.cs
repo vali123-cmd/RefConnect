@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
-
+using RefConnect.DTOs.Follow;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -25,22 +25,22 @@ namespace RefConnect.Controllers
         // POST: api/Follows
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> FollowUser([FromBody] Follow follow)
+        public async Task<IActionResult> FollowUser([FromBody] FollowDto followDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
-            if (userId != follow.FollowerId && !isAdmin)
+            if (userId != followDto.FollowerId && !isAdmin)
             {
                 return Forbid();
             }
 
-            if (follow.FollowerId == follow.FollowingId)
+            if (followDto.FollowerId == followDto.FollowingId)
             {
                 return BadRequest("You cannot follow yourself.");
             }
 
             var existingFollow = await _context.Follows
-                .FirstOrDefaultAsync(f => f.FollowerId == follow.FollowerId && f.FollowingId == follow.FollowingId);
+                .FirstOrDefaultAsync(f => f.FollowerId == followDto.FollowerId && f.FollowingId == followDto.FollowingId);
 
             if (existingFollow != null)
             {
@@ -49,8 +49,13 @@ namespace RefConnect.Controllers
 
             //if the profile is private, a follow request should be sent instead
             
-
-            follow.FollowedAt = DateTime.UtcNow;
+            var follow = new Follow
+            {
+                FollowerId = followDto.FollowerId,
+                FollowingId = followDto.FollowingId,
+                FollowedAt = DateTime.UtcNow
+            };
+            
             _context.Follows.Add(follow);
             await _context.SaveChangesAsync();
 
@@ -59,16 +64,16 @@ namespace RefConnect.Controllers
         // DELETE: api/Follows
         [Authorize]
         [HttpDelete]
-        public async Task<IActionResult> UnfollowUser([FromBody] Follow follow)
+        public async Task<IActionResult> UnfollowUser([FromBody] FollowDto followDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
-            if (userId != follow.FollowerId && !isAdmin)
+            if (userId != followDto.FollowerId && !isAdmin)
             {
                 return Forbid();
             }
             var existingFollow = await _context.Follows
-                .FirstOrDefaultAsync(f => f.FollowerId == follow.FollowerId && f.FollowingId == follow.FollowingId);
+                .FirstOrDefaultAsync(f => f.FollowerId == followDto.FollowerId && f.FollowingId == followDto.FollowingId);
             if (existingFollow == null)
             {
                 return NotFound("You are not following this user.");
@@ -81,4 +86,3 @@ namespace RefConnect.Controllers
         
     }
 };
-
