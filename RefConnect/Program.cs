@@ -10,6 +10,11 @@ using RefConnect.Models;
 using RefConnect.Services.Implementations;
 using RefConnect.Services.Interfaces;
 using System.Net.Http.Headers;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Transfer;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +114,36 @@ builder.Services.AddHttpClient<RefConnect.Services.Interfaces.IRefinePostTextAI,
 builder.Services.AddControllers();
 // Register application services
 builder.Services.AddScoped<RefConnect.Services.Interfaces.IProfileService, RefConnect.Services.Implementations.ProfileService>();
+
+// Replace the AddAWSService call with an explicit registration:
+var awsAccessKey = builder.Configuration["AWS:AccessKey"];
+var awsSecretKey = builder.Configuration["AWS:SecretKey"];
+var awsRegion = builder.Configuration["AWS:Region"] ?? "us-east-1";
+
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
+    var s3Config = new AmazonS3Config { RegionEndpoint = regionEndpoint };
+
+    
+    try
+    {
+        if (!string.IsNullOrWhiteSpace(awsAccessKey) && !string.IsNullOrWhiteSpace(awsSecretKey))
+        {
+            // Trim values to avoid accidental whitespace issues
+            var credentials = new BasicAWSCredentials(awsAccessKey.Trim(), awsSecretKey.Trim());
+            return new AmazonS3Client(credentials, s3Config);
+        }
+    }
+    catch
+    {
+        // If anything goes wrong creating explicit credentials, fall back to SDK credential chain
+    }
+
+    // Fallback: create client without explicit credentials so the SDK can resolve credentials.
+    return new AmazonS3Client(s3Config);
+});
+
 
 var app = builder.Build();
 
