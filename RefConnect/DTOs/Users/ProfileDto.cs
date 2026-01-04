@@ -16,8 +16,7 @@ public class ProfileDto
     public int FollowersCount { get; set; }
     public int FollowingCount { get; set; }
   
-    [Url]
-    public string ProfileImageUrl { get; set; }
+    public string? ProfileImageUrl { get; set; }
     [Required]
     public bool IsProfilePublic { get; set; }
 }

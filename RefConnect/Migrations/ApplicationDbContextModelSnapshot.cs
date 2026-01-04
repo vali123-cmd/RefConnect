@@ -221,7 +221,6 @@ namespace RefConnect.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("ProfileImageUrl")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("SecurityStamp")

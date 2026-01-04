@@ -17,8 +17,7 @@ public class ProfileExtendedDto
     public string Description { get; set; }
 
   
-    [Url]
-    public string ProfileImageUrl { get; set; }
+    public string? ProfileImageUrl { get; set; }
 
     [Required]
     public bool IsProfilePublic { get; set; }

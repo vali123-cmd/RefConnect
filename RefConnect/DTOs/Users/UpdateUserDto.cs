@@ -24,8 +24,8 @@ public class UpdateUserDto
     public string Description { get; set; }
 
     
-    [Required]
-    public string ProfileImageUrl { get; set; }
+    
+    public string? ProfileImageUrl { get; set; }
 
     [Required]
     public bool IsProfilePublic { get; set; }

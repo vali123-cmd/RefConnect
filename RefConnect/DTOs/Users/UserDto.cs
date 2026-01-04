@@ -22,7 +22,7 @@ public class UserDto
     [Required]
     public DateTime CreatedAt { get; set; }
     
-    public string ProfileImageUrl { get; set; }
+    public string? ProfileImageUrl { get; set; }
     [Required]
     public string Description { get; set; }
    

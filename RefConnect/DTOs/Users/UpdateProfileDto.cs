@@ -15,10 +15,9 @@ public class UpdateProfileDto
     [Required]
     [StringLength(1000)]
     public string Description { get; set; }
-
-    [Required]
-    [Url]
-    public string ProfileImageUrl { get; set; }
+    
+    
+    public string? ProfileImageUrl { get; set; }
 
     [Required]
     public bool IsProfilePublic { get; set; }

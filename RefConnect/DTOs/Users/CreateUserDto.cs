@@ -17,7 +17,7 @@ public class CreateUserDto
     public string Password { get; set; }
 
    
-    public string ProfileImageUrl { get; set; }
+    public string? ProfileImageUrl { get; set; }
     [StringLength(1000)]
     public string Description { get; set; }
 
