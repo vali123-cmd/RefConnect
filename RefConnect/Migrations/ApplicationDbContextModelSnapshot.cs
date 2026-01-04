@@ -276,22 +276,54 @@ namespace RefConnect.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("MatchId")
+                    b.Property<string>("CreatedByUserId")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("MatchId")
+                        .HasColumnType("varchar(255)");
+
                     b.HasKey("ChatId");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("MatchId")
                         .IsUnique();
 
                     b.ToTable("Chats");
+                });
+
+            modelBuilder.Entity("RefConnect.Models.ChatJoinRequest", b =>
+                {
+                    b.Property<string>("ChatJoinRequestId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ChatId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("ChatJoinRequestId");
+
+                    b.HasIndex("ChatId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ChatJoinRequests");
                 });
 
             modelBuilder.Entity("RefConnect.Models.ChatUser", b =>
@@ -577,13 +609,39 @@ namespace RefConnect.Migrations
 
             modelBuilder.Entity("RefConnect.Models.Chat", b =>
                 {
-                    b.HasOne("RefConnect.Models.Match", "Match")
-                        .WithOne("GroupChat")
-                        .HasForeignKey("RefConnect.Models.Chat", "MatchId")
+                    b.HasOne("RefConnect.Models.ApplicationUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("RefConnect.Models.Match", "Match")
+                        .WithOne("GroupChat")
+                        .HasForeignKey("RefConnect.Models.Chat", "MatchId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("CreatedByUser");
+
                     b.Navigation("Match");
+                });
+
+            modelBuilder.Entity("RefConnect.Models.ChatJoinRequest", b =>
+                {
+                    b.HasOne("RefConnect.Models.Chat", "Chat")
+                        .WithMany()
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RefConnect.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RefConnect.Models.ChatUser", b =>

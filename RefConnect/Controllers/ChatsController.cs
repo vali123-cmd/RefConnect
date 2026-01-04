@@ -28,7 +28,8 @@ namespace RefConnect.Controllers
 
 
 
-        // GET: api/Chats
+
+        
         [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ChatDto>>> GetChats()
@@ -38,21 +39,45 @@ namespace RefConnect.Controllers
             return Ok(chats);
         }
 
-        [Authorize]
-        // POST: api/Chats/direct
-        [HttpPost("direct")]
-        public async Task<ActionResult<ChatDto>> CreateDirectChat([FromBody] CreateChatDto dto)
+        
 
+        [Authorize]
+        [HttpPost("group")]
+        public async Task<ActionResult<ChatDto>> CreateGroupChat([FromBody] CreateGroupChatDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var chat = await _chatService.CreateDirectChatAsync(userId, dto.UserId);
+            var chat = await _chatService.CreateGroupChatAsync(userId, dto);
             return Ok(chat);
         }
 
-        
-        
+        [Authorize]
+        [HttpDelete("{chatId}")]
+        public async Task<IActionResult> DeleteChat(string chatId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            var result = await _chatService.DeleteChatAsync(userId, chatId, isAdmin);
+            if (result)
+            {
+                return NoContent();
+            }
+            return NotFound();
+        }
 
-        
+        [Authorize]
+        [HttpPut("{chatId}")]
+        public async Task<IActionResult> UpdateChat(string chatId, [FromBody] UpdateChatDto dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            var result = await _chatService.UpdateChatAsync(userId, chatId, dto, isAdmin);
+            if (result)
+            {
+                return NoContent();
+            }
+            return NotFound();
+
+        }
         
         
        

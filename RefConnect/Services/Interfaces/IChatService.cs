@@ -15,6 +15,7 @@ public interface IChatService
 
     // Create a new group chat with initial members (creator will be added as member)
     Task<ChatDto> CreateGroupChatAsync(string creatorId, string groupName, IEnumerable<string> initialUserIds, CancellationToken ct = default);
+    Task<ChatDto> CreateGroupChatAsync(string creatorId, CreateGroupChatDto dto, CancellationToken ct = default);
 
     // Add/Remove members (group only)
     Task<bool> AddUserToGroupAsync(string chatId, string requesterId, string userIdToAdd, CancellationToken ct = default);
@@ -29,4 +30,8 @@ public interface IChatService
     // Additional utilities
 
     Task<bool> LeaveChatAsync(string chatId, string userId, CancellationToken ct = default);
+    
+    Task<bool> DeleteChatAsync(string userId, string chatId, bool isAdmin = false, CancellationToken ct = default);
+    
+    Task<bool> UpdateChatAsync(string userId, string chatId, UpdateChatDto dto, bool isAdmin = false, CancellationToken ct = default);
 }

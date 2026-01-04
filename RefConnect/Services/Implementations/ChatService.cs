@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.DTOs.Chats;
+using RefConnect.DTOs.ChatUsers;
 using RefConnect.DTOs.Messages;
 using RefConnect.DTOs.Shared;
 using RefConnect.Models;
@@ -23,51 +24,7 @@ public class ChatService : IChatService
         _db = db;
     }
 
-    public async Task<ChatDto> CreateDirectChatAsync(string userAId, string userBId, CancellationToken ct = default)
-    {
-        // try find existing direct chat with exactly these two members
-        var chat = await _db.Chats
-            .Include(c => c.ChatUsers)
-            .Where(c => c.ChatType == "direct")
-            .FirstOrDefaultAsync(c => c.ChatUsers.Any(u => u.UserId == userAId) && c.ChatUsers.Any(u => u.UserId == userBId), ct);
-
-        if (chat != null)
-        {
-            return new ChatDto
-            {
-                ChatId = chat.ChatId,
-                ChatType = chat.ChatType,
-                CreatedAt = chat.CreatedAt,
-                ExpiresAt = chat.ExpiresAt,
-                IsActive = chat.IsActive,
-                MatchId = chat.MatchId
-            };
-        }
-
-        var newChat = new Chat
-        {
-            ChatId = Guid.NewGuid().ToString(),
-            ChatType = "direct",
-            CreatedAt = DateTime.UtcNow,
-            IsActive = true
-        };
-
-        newChat.ChatUsers.Add(new ChatUser { ChatUserId = Guid.NewGuid().ToString(), ChatId = newChat.ChatId, UserId = userAId });
-        newChat.ChatUsers.Add(new ChatUser { ChatUserId = Guid.NewGuid().ToString(), ChatId = newChat.ChatId, UserId = userBId });
-
-        _db.Chats.Add(newChat);
-        await _db.SaveChangesAsync(ct);
-
-        return new ChatDto
-        {
-            ChatId = newChat.ChatId,
-            ChatType = newChat.ChatType,
-            CreatedAt = newChat.CreatedAt,
-            ExpiresAt = newChat.ExpiresAt,
-            IsActive = newChat.IsActive,
-            MatchId = newChat.MatchId
-        };
-    }
+   
 
     public async Task<ChatDto> CreateGroupChatAsync(string creatorId, string groupName, IEnumerable<string> initialUserIds, CancellationToken ct = default)
     {
@@ -76,7 +33,8 @@ public class ChatService : IChatService
             ChatId = Guid.NewGuid().ToString(),
             ChatType = "group",
             CreatedAt = DateTime.UtcNow,
-            IsActive = true
+            CreatedByUserId = creatorId,
+            Description = groupName
         };
 
         var members = new HashSet<string>(initialUserIds ?? Enumerable.Empty<string>());
@@ -95,9 +53,61 @@ public class ChatService : IChatService
             ChatId = newChat.ChatId,
             ChatType = newChat.ChatType,
             CreatedAt = newChat.CreatedAt,
-            ExpiresAt = newChat.ExpiresAt,
-            IsActive = newChat.IsActive,
-            MatchId = newChat.MatchId
+            CreatedByUserId = newChat.CreatedByUserId,
+            Description = newChat.Description,
+            
+
+        };
+    }
+
+    public async Task<ChatDto> CreateGroupChatAsync(string creatorId, CreateGroupChatDto dto, CancellationToken ct = default)
+    {
+        return await CreateGroupChatAsync(creatorId, dto.GroupName, dto.InitialUserIds, ct);
+    }
+
+    public async Task<ChatDto?> CreateDirectChatAsync(string userAId, string userBId, CancellationToken ct = default)
+    {
+        // Check if a direct chat already exists between the two users
+        var existingChat = await _db.Chats
+            .Include(c => c.ChatUsers)
+            .Where(c => c.ChatType == "direct")
+            .Where(c => c.ChatUsers.Any(cu => cu.UserId == userAId) && c.ChatUsers.Any(cu => cu.UserId == userBId))
+            .FirstOrDefaultAsync(ct);
+
+        if (existingChat != null)
+        {
+            return new ChatDto
+            {
+                ChatId = existingChat.ChatId,
+                ChatType = existingChat.ChatType,
+                CreatedAt = existingChat.CreatedAt,
+                CreatedByUserId = existingChat.CreatedByUserId,
+                Description = existingChat.Description
+            };
+        }
+
+        var newChat = new Chat
+        {
+            ChatId = Guid.NewGuid().ToString(),
+            ChatType = "direct",
+            CreatedAt = DateTime.UtcNow,
+            CreatedByUserId = userAId,
+            Description = "Direct Chat"
+        };
+
+        newChat.ChatUsers.Add(new ChatUser { ChatUserId = Guid.NewGuid().ToString(), ChatId = newChat.ChatId, UserId = userAId });
+        newChat.ChatUsers.Add(new ChatUser { ChatUserId = Guid.NewGuid().ToString(), ChatId = newChat.ChatId, UserId = userBId });
+
+        _db.Chats.Add(newChat);
+        await _db.SaveChangesAsync(ct);
+
+        return new ChatDto
+        {
+            ChatId = newChat.ChatId,
+            ChatType = newChat.ChatType,
+            CreatedAt = newChat.CreatedAt,
+            CreatedByUserId = newChat.CreatedByUserId,
+            Description = newChat.Description
         };
     }
 
@@ -214,6 +224,38 @@ public class ChatService : IChatService
         return true;
     }
 
+    public async Task<bool> DeleteChatAsync(string userId, string chatId, bool isAdmin = false, CancellationToken ct = default)
+    {
+        var chat = await _db.Chats.FirstOrDefaultAsync(c => c.ChatId == chatId, ct);
+        if (chat == null) return false;
+        
+        // Only the creator or admin can delete the chat
+        if (!isAdmin && chat.CreatedByUserId != userId) return false;
+        
+        _db.Chats.Remove(chat);
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<bool> UpdateChatAsync(string userId, string chatId, UpdateChatDto dto, bool isAdmin = false, CancellationToken ct = default)
+    {
+        var chat = await _db.Chats.FirstOrDefaultAsync(c => c.ChatId == chatId, ct);
+        if (chat == null) return false;
+        
+        // Only the creator or admin can update the chat
+        if (!isAdmin && chat.CreatedByUserId != userId) return false;
+        
+        // Use ChatName or Description (since Chat model uses Description as the name)
+        if (!string.IsNullOrEmpty(dto.ChatName))
+            chat.Description = dto.ChatName;
+        
+        if (dto.Description != null)
+            chat.Description = dto.Description;
+        
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
     public async Task<IEnumerable<ChatDto>> GetChatsForUserAsync(string userId, CancellationToken ct = default)
     {
         var chats = await _db.ChatUsers
@@ -225,10 +267,15 @@ public class ChatService : IChatService
                 ChatId = c.ChatId,
                 ChatType = c.ChatType,
                 CreatedAt = c.CreatedAt,
-                ExpiresAt = c.ExpiresAt,
-                IsActive = c.IsActive,
-                MatchId = c.MatchId
-            })
+                CreatedByUserId = c.CreatedByUserId,
+                Description = c.Description,
+                ChatUsers = c.ChatUsers.Select(cu => new ChatUserDto
+                {
+                    ChatUserId = cu.ChatUserId,
+                    ChatId = cu.ChatId,
+                    UserId = cu.UserId
+                }).ToList()
+                })
             .ToListAsync(ct);
 
         return chats;

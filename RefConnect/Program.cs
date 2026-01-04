@@ -116,6 +116,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<RefConnect.Services.Interfaces.IProfileService, RefConnect.Services.Implementations.ProfileService>();
 builder.Services.AddScoped<IFollowRequestService, FollowRequestService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IChatJoinRequestService, ChatJoinRequestService>();
 
 // Replace the AddAWSService call with an explicit registration:
 var awsAccessKey = builder.Configuration["AWS:AccessKey"];

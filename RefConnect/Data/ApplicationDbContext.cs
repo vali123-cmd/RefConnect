@@ -27,6 +27,8 @@ namespace RefConnect.Data
         public DbSet<Follow> Follows { get; set; }
 
         public DbSet<Like> Likes { get; set; }
+        
+        public DbSet<ChatJoinRequest> ChatJoinRequests { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             

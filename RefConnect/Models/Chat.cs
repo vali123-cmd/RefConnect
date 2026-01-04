@@ -7,17 +7,24 @@ public class Chat
 {
     [Key]
     public string ChatId { get; set; }
+
+    [Required]
     public string ChatType { get; set; } // direct / group
     public DateTime CreatedAt { get; set; }
-    public DateTime? ExpiresAt { get; set; }
-    public bool IsActive { get; set; }
 
-    [Required(ErrorMessage = "MatchId is required for match chats")]
+    [Required]
+    public string Description { get; set; }
+
+    [Required]
+    public string CreatedByUserId { get; set; }
+    [ForeignKey("CreatedByUserId")]
+
+    public virtual ApplicationUser CreatedByUser { get; set; }
+    
+    
     public string? MatchId { get; set; }
     [ForeignKey("MatchId")]
-
-    [Required(ErrorMessage = "Match is required for match chats")]
-    public Match Match { get; set; } = new Match();
+    public virtual Match? Match { get; set; }
 
     public virtual ICollection<ChatUser> ChatUsers { get; set; } = new List<ChatUser>();
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
