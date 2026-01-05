@@ -29,25 +29,6 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenLocalhost(5000);
-    options.ListenLocalhost(7016, listenOptions =>
-    {
-        listenOptions.UseHttps();
-    });
-});
-
-
-if (builder.Environment.IsDevelopment())
-{
-    builder.WebHost.ConfigureKestrel(options =>
-    {
-        options.ListenLocalhost(5000);
-        options.ListenLocalhost(7016, listenOptions => listenOptions.UseHttps());
-    });
-}
-
 
 builder.Services.AddCors(options =>
 {
@@ -176,6 +157,12 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
 
 
 var app = builder.Build();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
+
 
 using (var scope = app.Services.CreateScope())
 {
