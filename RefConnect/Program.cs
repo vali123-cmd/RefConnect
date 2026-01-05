@@ -22,11 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 // - HTTPS uses the ASP.NET Core dev-certificate ("dotnet dev-certs https")
 // - Ports match `Properties/launchSettings.json`
 
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
-                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
-});
+
 
 
 
