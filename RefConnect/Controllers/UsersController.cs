@@ -209,8 +209,9 @@ namespace RefConnect.Controllers
             // Anonymize fields used in the app
             user.UserName = $"deleted_{user.Id}";
             user.NormalizedUserName = user.UserName.ToUpperInvariant();
-            user.Email = null;
-            user.NormalizedEmail = null;
+            // Use a dummy email to satisfy the [Required] validation and UniqueEmail constraint
+            user.Email = $"deleted_{user.Id}@refconnect.local";
+            user.NormalizedEmail = user.Email.ToUpperInvariant();
             user.PhoneNumber = null;
 
             user.FirstName = "Deleted";
