@@ -18,6 +18,28 @@ using Amazon.S3.Transfer;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// HTTPS/HTTP endpoints (dev-friendly defaults)
+// - HTTPS uses the ASP.NET Core dev-certificate ("dotnet dev-certs https")
+// - Ports match `Properties/launchSettings.json`
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5148);
+    options.ListenLocalhost(7016, listenOptions =>
+    {
+        listenOptions.UseHttps();
+    });
+});
+
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.ListenLocalhost(5148);
+        options.ListenLocalhost(7016, listenOptions => listenOptions.UseHttps());
+    });
+}
+
 
 builder.Services.AddCors(options =>
 {
