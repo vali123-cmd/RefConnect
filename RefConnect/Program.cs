@@ -23,7 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 // - Ports match `Properties/launchSettings.json`
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenLocalhost(5148);
+    options.ListenLocalhost(5000);
     options.ListenLocalhost(7016, listenOptions =>
     {
         listenOptions.UseHttps();
@@ -35,7 +35,7 @@ if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.ConfigureKestrel(options =>
     {
-        options.ListenLocalhost(5148);
+        options.ListenLocalhost(5000);
         options.ListenLocalhost(7016, listenOptions => listenOptions.UseHttps());
     });
 }
