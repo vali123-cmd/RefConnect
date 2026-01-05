@@ -18,6 +18,13 @@ using Amazon.S3.Transfer;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// HTTPS/HTTP endpoints (dev-friendly defaults)
+// - HTTPS uses the ASP.NET Core dev-certificate ("dotnet dev-certs https")
+// - Ports match `Properties/launchSettings.json`
+
+
+
+
 
 builder.Services.AddCors(options =>
 {
@@ -146,6 +153,12 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
 
 
 var app = builder.Build();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
+
 
 using (var scope = app.Services.CreateScope())
 {
