@@ -34,4 +34,9 @@ public interface IChatService
     Task<bool> DeleteChatAsync(string userId, string chatId, bool isAdmin = false, CancellationToken ct = default);
     
     Task<bool> UpdateChatAsync(string userId, string chatId, UpdateChatDto dto, bool isAdmin = false, CancellationToken ct = default);
+    Task<IEnumerable<ChatDto>> GetAllChatsAsync(string? chatType = null, CancellationToken ct = default);
+
+    // Search chats by name/description. If requesterId is provided, results are limited to chats they are a member of,
+    // unless isAdmin=true.
+    Task<IEnumerable<ChatDto>> SearchChatsAsync(string? requesterId, string query, bool isAdmin = false, string? chatType = null, CancellationToken ct = default);
 }

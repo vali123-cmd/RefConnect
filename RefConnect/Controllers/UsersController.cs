@@ -197,7 +197,38 @@ namespace RefConnect.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            var result = await _userManager.DeleteAsync(user);
+            // Soft delete: keep the user row to avoid FK constraint failures.
+            // Disable login and anonymize personal data.
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.MaxValue;
+
+            user.EmailConfirmed = false;
+            user.PhoneNumberConfirmed = false;
+            user.TwoFactorEnabled = false;
+
+            // Anonymize fields used in the app
+            user.UserName = $"deleted_{user.Id}";
+            user.NormalizedUserName = user.UserName.ToUpperInvariant();
+            user.Email = null;
+            user.NormalizedEmail = null;
+            user.PhoneNumber = null;
+
+            user.FirstName = "Deleted";
+            user.LastName = "User";
+            user.Description = "[deleted]";
+            user.ProfileImageUrl = null;
+            user.IsProfilePublic = false;
+
+            // Replace password with a random one so existing credentials no longer work.
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var randomPassword = $"{Guid.NewGuid():N}aA1!";
+            var resetResult = await _userManager.ResetPasswordAsync(user, resetToken, randomPassword);
+            if (!resetResult.Succeeded)
+            {
+                return BadRequest(resetResult.Errors);
+            }
+
+            var result = await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
             {

@@ -117,13 +117,13 @@ namespace RefConnect.Data
                 .HasOne(f => f.Follower)
                 .WithMany(u => u.Following)
                 .HasForeignKey(f => f.FollowerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
             
             modelBuilder.Entity<Follow>()
                 .HasOne(f => f.Following)
                 .WithMany(u => u.Followers)
                 .HasForeignKey(f => f.FollowingId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             //follow request
             modelBuilder.Entity<FollowRequest>()
@@ -133,14 +133,14 @@ namespace RefConnect.Data
                 .HasOne(fr => fr.FollowerRequest)
                 .WithMany(u => u.FollowingRequest)
                 .HasForeignKey(fr => fr.FollowerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
             
 
             modelBuilder.Entity<FollowRequest>()
                 .HasOne(fr => fr.FollowingRequest)
                 .WithMany(u => u.FollowerRequest)
                 .HasForeignKey(fr => fr.FollowingId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             //like
             modelBuilder.Entity<Like>()
@@ -149,13 +149,13 @@ namespace RefConnect.Data
                 .HasOne(l => l.User)
                 .WithMany()
                 .HasForeignKey(l => l.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
             
             modelBuilder.Entity<Like>()
                 .HasOne(l => l.Post)
                 .WithMany(p => p.Likes)
                 .HasForeignKey(l => l.PostId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
             
             
 

@@ -53,12 +53,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 
 builder.Services.AddEndpointsApiExplorer();
-// builder.Services.AddOpenApi(); // Optional: You usually don't need this if using SwaggerGen below.
 
-// 2. FIXED SWAGGER CONFIGURATION
 builder.Services.AddSwaggerGen(option =>
 {
-    // A. Define the Security Scheme
+   
     option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -133,24 +131,22 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
     {
         if (!string.IsNullOrWhiteSpace(awsAccessKey) && !string.IsNullOrWhiteSpace(awsSecretKey))
         {
-            // Trim values to avoid accidental whitespace issues
+            
             var credentials = new BasicAWSCredentials(awsAccessKey.Trim(), awsSecretKey.Trim());
             return new AmazonS3Client(credentials, s3Config);
         }
     }
     catch
     {
-        // If anything goes wrong creating explicit credentials, fall back to SDK credential chain
+        
     }
 
-    // Fallback: create client without explicit credentials so the SDK can resolve credentials.
     return new AmazonS3Client(s3Config);
 });
 
 
 var app = builder.Build();
 
-//Creating roles: admin, user, moderator
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -161,6 +157,9 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 }
+
+
+await SeedData.SeedAdminAsync(app.Services, app.Configuration);
 
     
     app.UseStaticFiles();

@@ -28,21 +28,29 @@ public class ChatService : IChatService
 
     public async Task<ChatDto> CreateGroupChatAsync(string creatorId, string groupName, IEnumerable<string> initialUserIds, CancellationToken ct = default)
     {
+        var safeName = string.IsNullOrWhiteSpace(groupName) ? "New Group" : groupName.Trim();
+
         var newChat = new Chat
         {
             ChatId = Guid.NewGuid().ToString(),
             ChatType = "group",
             CreatedAt = DateTime.UtcNow,
             CreatedByUserId = creatorId,
-            Description = groupName
+            Name = safeName,
+            Description = safeName
         };
 
-        var members = new HashSet<string>(initialUserIds ?? Enumerable.Empty<string>());
-        members.Add(creatorId);
+        var memberIds = new HashSet<string>(initialUserIds ?? Enumerable.Empty<string>());
+        memberIds.Add(creatorId);
 
-        foreach (var userId in members)
+        foreach (var userId in memberIds.Where(id => !string.IsNullOrWhiteSpace(id)))
         {
-            newChat.ChatUsers.Add(new ChatUser { ChatUserId = Guid.NewGuid().ToString(), ChatId = newChat.ChatId, UserId = userId });
+            newChat.ChatUsers.Add(new ChatUser
+            {
+                ChatUserId = Guid.NewGuid().ToString(),
+                ChatId = newChat.ChatId,
+                UserId = userId
+            });
         }
 
         _db.Chats.Add(newChat);
@@ -54,6 +62,7 @@ public class ChatService : IChatService
             ChatType = newChat.ChatType,
             CreatedAt = newChat.CreatedAt,
             CreatedByUserId = newChat.CreatedByUserId,
+            Name = newChat.Name,
             Description = newChat.Description,
             
 
@@ -82,6 +91,7 @@ public class ChatService : IChatService
                 ChatType = existingChat.ChatType,
                 CreatedAt = existingChat.CreatedAt,
                 CreatedByUserId = existingChat.CreatedByUserId,
+                Name = existingChat.Name,
                 Description = existingChat.Description
             };
         }
@@ -91,7 +101,9 @@ public class ChatService : IChatService
             ChatId = Guid.NewGuid().ToString(),
             ChatType = "direct",
             CreatedAt = DateTime.UtcNow,
+
             CreatedByUserId = userAId,
+            Name = "Direct Chat",
             Description = "Direct Chat"
         };
 
@@ -105,6 +117,7 @@ public class ChatService : IChatService
         {
             ChatId = newChat.ChatId,
             ChatType = newChat.ChatType,
+            Name = newChat.Name,
             CreatedAt = newChat.CreatedAt,
             CreatedByUserId = newChat.CreatedByUserId,
             Description = newChat.Description
@@ -244,13 +257,19 @@ public class ChatService : IChatService
         
         // Only the creator or admin can update the chat
         if (!isAdmin && chat.CreatedByUserId != userId) return false;
-        
-        // Use ChatName or Description (since Chat model uses Description as the name)
-        if (!string.IsNullOrEmpty(dto.ChatName))
-            chat.Description = dto.ChatName;
-        
+
+        // Update name/description using the DTO's actual fields
+        if (!string.IsNullOrWhiteSpace(dto.ChatName))
+            chat.Name = dto.ChatName;
+
         if (dto.Description != null)
             chat.Description = dto.Description;
+
+        if (!string.IsNullOrWhiteSpace(dto.ChatType))
+            chat.ChatType = dto.ChatType;
+
+        if (dto.MatchId != null)
+            chat.MatchId = dto.MatchId;
         
         await _db.SaveChangesAsync(ct);
         return true;
@@ -267,6 +286,7 @@ public class ChatService : IChatService
                 ChatId = c.ChatId,
                 ChatType = c.ChatType,
                 CreatedAt = c.CreatedAt,
+                Name = c.Name,
                 CreatedByUserId = c.CreatedByUserId,
                 Description = c.Description,
                 ChatUsers = c.ChatUsers.Select(cu => new ChatUserDto
@@ -279,5 +299,120 @@ public class ChatService : IChatService
             .ToListAsync(ct);
 
         return chats;
+    }
+
+    public async Task<IEnumerable<ChatDto>> GetAllChatsAsync(string? chatType = null, CancellationToken ct = default)
+    {
+        var query = _db.Chats
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(chatType))
+        {
+            query = query.Where(c => c.ChatType == chatType);
+        }
+
+        var chats = await query
+            .Select(c => new ChatDto
+            {
+                ChatId = c.ChatId,
+                ChatType = c.ChatType,
+                CreatedAt = c.CreatedAt,
+                Name = c.Name,
+                CreatedByUserId = c.CreatedByUserId,
+                Description = c.Description,
+                ChatUsers = c.ChatUsers.Select(cu => new ChatUserDto
+                {
+                    ChatUserId = cu.ChatUserId,
+                    ChatId = cu.ChatId,
+                    UserId = cu.UserId
+                }).ToList()
+            })
+            .ToListAsync(ct);
+
+        return chats;
+    }
+    public async Task<IEnumerable<ChatDto>> SearchChatsAsync(string requesterId, string query, CancellationToken ct = default)
+    {
+        var chats = await _db.ChatUsers
+            .AsNoTracking()
+            .Where(cu => cu.UserId == requesterId && cu.Chat.Description!.Contains(query))
+            .Select(cu => cu.Chat)
+            .Select(c => new ChatDto
+            {
+                ChatId = c.ChatId,
+                ChatType = c.ChatType,
+                CreatedAt = c.CreatedAt,
+                CreatedByUserId = c.CreatedByUserId,
+                Name = c.Name,
+                Description = c.Description,
+                ChatUsers = c.ChatUsers.Select(cu => new ChatUserDto
+                {
+                    ChatUserId = cu.ChatUserId,
+                    ChatId = cu.ChatId,
+                    UserId = cu.UserId
+                }).ToList()
+            })
+            .ToListAsync(ct);
+
+        return chats;
+    }
+
+    public async Task<IEnumerable<ChatDto>> SearchChatsAsync(
+        string? requesterId,
+        string query,
+        bool isAdmin = false,
+        string? chatType = null,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return Array.Empty<ChatDto>();
+        }
+
+        var q = query.Trim();
+
+        var chatsQuery = _db.Chats
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(chatType))
+        {
+            chatsQuery = chatsQuery.Where(c => c.ChatType == chatType);
+        }
+
+        // If not admin, restrict to chats the requester is a member of.
+        if (!isAdmin)
+        {
+            if (string.IsNullOrWhiteSpace(requesterId))
+                return Array.Empty<ChatDto>();
+
+            chatsQuery = chatsQuery.Where(c => c.ChatUsers.Any(cu => cu.UserId == requesterId));
+        }
+
+        // Search by name/description (EF will translate to LIKE)
+        chatsQuery = chatsQuery.Where(c =>
+            c.Name.Contains(q) ||
+            c.Description.Contains(q));
+
+        var results = await chatsQuery
+            .Select(c => new ChatDto
+            {
+                ChatId = c.ChatId,
+                ChatType = c.ChatType,
+                CreatedAt = c.CreatedAt,
+                Name = c.Name,
+                CreatedByUserId = c.CreatedByUserId,
+                Description = c.Description,
+                ChatUsers = c.ChatUsers.Select(cu => new ChatUserDto
+                {
+                    ChatUserId = cu.ChatUserId,
+                    ChatId = cu.ChatId,
+                    UserId = cu.UserId
+                }).ToList()
+            })
+            .ToListAsync(ct);
+
+        return results;
     }
 }

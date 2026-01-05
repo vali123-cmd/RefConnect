@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using RefConnect.Data;
 using RefConnect.Models;
 using RefConnect.DTOs.Messages;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace RefConnect.Controllers
 {
@@ -16,7 +18,40 @@ namespace RefConnect.Controllers
         {
             _context = context;
         }
+        [HttpGet("Chat/{chatId}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<MessageDto>>> GetMessagesForChat(string chatId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdminApp = User.IsInRole("Admin");
+            if (string.IsNullOrEmpty(userId) && !isAdminApp)
+            {
+                return Unauthorized();
+            }
+            //userul trebuie sa fie membru al chatului pentru a vedea mesajele
+            //se verifica daca userId este membru al chatului cu chatId
+            var isMember = await _context.ChatUsers
+                .AnyAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
+            if (!isMember && !isAdminApp)
+            {
+                return Forbid();
+            }
+            var messages = await _context.Messages
+                .Where(m => m.ChatId == chatId)
+                .Select(m => new MessageDto
+                {
+                    MessageId = m.MessageId,
+                    Content = m.Content,
+                    SentAt = m.SentAt,
+                    ChatId = m.ChatId,
+                    UserId = m.UserId
+                })
+                .OrderByDescending(m => m.SentAt)
+                .ToListAsync();
+            return Ok(messages);
 
+        }
+        
         // GET: api/Messages
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MessageDto>>> GetMessages()
@@ -59,9 +94,17 @@ namespace RefConnect.Controllers
         }
 
         // POST: api/Messages
+      
         [HttpPost]
+          [Authorize]
         public async Task<ActionResult<MessageDto>> CreateMessage(CreateMessageDto createDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+           
+            if(createDto.UserId != userId)
+            {
+                return Forbid();
+            }
             var message = new Message
             {
                 MessageId = Guid.NewGuid().ToString(),
@@ -88,13 +131,21 @@ namespace RefConnect.Controllers
 
         // PUT: api/Messages/{id}
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateMessage(string id, UpdateMessageDto updateDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdminApp = User.IsInRole("Admin");
             var message = await _context.Messages.FindAsync(id);
 
             if (message == null)
             {
                 return NotFound();
+            }
+
+            if (userId != message.UserId && !isAdminApp)
+            {
+                return Forbid();
             }
 
             message.Content = updateDto.Content;
@@ -106,13 +157,21 @@ namespace RefConnect.Controllers
 
         // DELETE: api/Messages/{id}
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteMessage(string id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdminApp = User.IsInRole("Admin");
             var message = await _context.Messages.FindAsync(id);
 
             if (message == null)
             {
                 return NotFound();
+            }
+
+            if (userId != message.UserId && !isAdminApp)
+            {
+                return Forbid();
             }
 
             _context.Messages.Remove(message);

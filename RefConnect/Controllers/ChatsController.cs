@@ -35,9 +35,21 @@ namespace RefConnect.Controllers
         public async Task<ActionResult<IEnumerable<ChatDto>>> GetChats()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var chats = await _chatService.GetChatsForUserAsync(userId);
+            string chatType = "group";
+            var chats = await _chatService.GetAllChatsAsync(chatType);
             return Ok(chats);
         }
+
+        [Authorize]
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<ChatDto>>> SearchChats([FromQuery] string query, [FromQuery] string? chatType = null)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            var chats = await _chatService.SearchChatsAsync(userId, query, isAdmin, chatType);
+            return Ok(chats);
+        }
+    
 
         
 
@@ -77,6 +89,76 @@ namespace RefConnect.Controllers
             }
             return NotFound();
 
+        }
+
+       
+        [Authorize]
+        [HttpGet("{chatId}/is-member/{userId}")]
+        public async Task<ActionResult<bool>> IsUserMemberOfGroupChat(string chatId, string userId)
+        {
+            
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && requesterId != userId)
+            {
+                return Forbid();
+            }
+
+       
+            var chat = await _context.Chats
+                .AsNoTracking()
+                .Where(c => c.ChatId == chatId)
+                .Select(c => new { c.ChatId, c.ChatType, c.Name })
+                .FirstOrDefaultAsync();
+
+            if (chat == null)
+                return NotFound();
+
+            if (chat.ChatType != "group")
+                return BadRequest();
+
+            
+            var isMember = await _context.ChatUsers
+                .AsNoTracking()
+                .Where(cu => cu.ChatId == chatId && cu.UserId == userId)
+                .AnyAsync();
+
+            return Ok(isMember);
+        }
+
+
+        [Authorize]
+        [HttpDelete("{chatId}/members/{userId}")]
+        public async Task<IActionResult> RemoveUserFromChat(string chatId, string userId)
+        {
+            var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(requesterId))
+                return Unauthorized();
+
+            var isAdmin = User.IsInRole("Admin");
+
+            var chatInfo = await _context.Chats
+                .AsNoTracking()
+                .Where(c => c.ChatId == chatId)
+                .Select(c => new { c.ChatId, c.ChatType, c.CreatedByUserId })
+                .FirstOrDefaultAsync();
+
+            if (chatInfo == null)
+                return NotFound();
+
+            if (chatInfo.ChatType != "group")
+                return BadRequest("This endpoint is only for group chats.");
+
+            var isSelfRemoval = requesterId == userId;
+
+            if (!isSelfRemoval && !isAdmin && chatInfo.CreatedByUserId != requesterId)
+                return Forbid();
+
+            
+            var ok = await _chatService.RemoveUserFromGroupAsync(chatId, requesterId, userId);
+            if (!ok) return NotFound();
+
+            return NoContent();
         }
         
         

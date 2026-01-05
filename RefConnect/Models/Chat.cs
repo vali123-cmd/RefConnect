@@ -13,6 +13,9 @@ public class Chat
     public DateTime CreatedAt { get; set; }
 
     [Required]
+    public string Name { get; set; }
+
+    [Required]
     public string Description { get; set; }
 
     [Required]

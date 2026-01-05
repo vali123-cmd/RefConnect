@@ -287,6 +287,10 @@ namespace RefConnect.Migrations
                     b.Property<string>("MatchId")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.HasKey("ChatId");
 
                     b.HasIndex("CreatedByUserId");
@@ -694,13 +698,13 @@ namespace RefConnect.Migrations
                     b.HasOne("RefConnect.Models.ApplicationUser", "Follower")
                         .WithMany("Following")
                         .HasForeignKey("FollowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("RefConnect.Models.ApplicationUser", "Following")
                         .WithMany("Followers")
                         .HasForeignKey("FollowingId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Follower");
@@ -713,13 +717,13 @@ namespace RefConnect.Migrations
                     b.HasOne("RefConnect.Models.ApplicationUser", "FollowerRequest")
                         .WithMany("FollowingRequest")
                         .HasForeignKey("FollowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("RefConnect.Models.ApplicationUser", "FollowingRequest")
                         .WithMany("FollowerRequest")
                         .HasForeignKey("FollowingId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("FollowerRequest");
@@ -732,13 +736,13 @@ namespace RefConnect.Migrations
                     b.HasOne("RefConnect.Models.Post", "Post")
                         .WithMany("Likes")
                         .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("RefConnect.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Post");
