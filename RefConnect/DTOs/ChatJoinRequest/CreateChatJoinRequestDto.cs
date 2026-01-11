@@ -4,6 +4,6 @@ namespace RefConnect.DTOs.ChatJoinRequest;
 
 public class CreateChatJoinRequestDto
 {
-    [Required]
+    [Required(ErrorMessage = "Id-ul chat-ului este obligatoriu.")]
     public string ChatId { get; set; } = null!;
 }

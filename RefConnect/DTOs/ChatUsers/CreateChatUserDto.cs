@@ -4,10 +4,10 @@ namespace RefConnect.DTOs.ChatUsers;
 
 public class CreateChatUserDto
 {
-    [Required]
+    [Required(ErrorMessage = "Id-ul chat-ului este obligatoriu.")]
     public string ChatId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Id-ul utilizatorului este obligatoriu.")]
     public string UserId { get; set; }
 }
 

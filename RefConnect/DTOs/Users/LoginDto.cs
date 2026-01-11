@@ -4,10 +4,10 @@ namespace RefConnect.DTOs.Users;
 
 public class LoginDto
 {
-    [Required]
-    [EmailAddress]
+    [Required(ErrorMessage = "Email este obligatoriu.")]
+    [EmailAddress(ErrorMessage = "Email invalid.")]
     public string Email { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Parola este obligatorie.")]
     public string Password { get; set; }
 }

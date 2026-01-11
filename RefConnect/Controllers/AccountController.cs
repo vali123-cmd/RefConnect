@@ -85,7 +85,7 @@ public class AccountController : ControllerBase
     {
         var user = await _userManager.FindByEmailAsync(model.Email);
     if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-        return Unauthorized(new { Message = "Invalid credentials" });
+        return Unauthorized(new { Message = "Email sau parola incorecta." });
 
         var userRoles = await _userManager.GetRolesAsync(user);
 
