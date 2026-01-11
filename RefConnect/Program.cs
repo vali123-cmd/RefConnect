@@ -123,6 +123,17 @@ builder.Services.AddScoped<IFollowRequestService, FollowRequestService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatJoinRequestService, ChatJoinRequestService>();
 
+// Configure max request size for file uploads (e.g., 100 MB)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104857600; 
+});
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 104857600;
+});
+
 // Replace the AddAWSService call with an explicit registration:
 var awsAccessKey = builder.Configuration["AWS:AccessKey"];
 var awsSecretKey = builder.Configuration["AWS:SecretKey"];

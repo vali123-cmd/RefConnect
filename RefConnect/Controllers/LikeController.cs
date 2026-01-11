@@ -101,5 +101,21 @@ namespace RefConnect.Controllers
             var exists = await _context.Likes.AnyAsync(l => l.UserId == req.UserId && l.PostId == req.PostId);
             return Ok(exists);
         }
+
+        // GET: api/Like/post/{postId}
+        [HttpGet("post/{postId}")]
+        public async Task<ActionResult<IEnumerable<LikeDto>>> GetLikesForPost(string postId)
+        {
+            var likes = await _context.Likes
+                .Where(l => l.PostId == postId)
+                .Select(l => new LikeDto
+                {
+                    UserId = l.UserId,
+                    PostId = l.PostId,
+                    LikedAt = l.LikedAt
+                })
+                .ToListAsync();
+            return Ok(likes);
+        }
     }
 }
